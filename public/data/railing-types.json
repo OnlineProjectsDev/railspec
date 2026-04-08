@@ -1,0 +1,58 @@
+{
+  "railingTypes": [
+    {
+      "id": 1,
+      "name": "Glass Panel",
+      "description": "Modern glass railing",
+      "price": "$150/ft",
+      "category": "modern",
+      "popular": true,
+      "image": "/images/railings/Group 48.png"
+    },
+    {
+      "id": 2,
+      "name": "Steel Cables",
+      "description": "Industrial cable design",
+      "price": "$120/ft",
+      "category": "industrial",
+      "popular": true,
+      "image": "/images/railings/Group 49.png"
+    },
+    {
+      "id": 3,
+      "name": "Wood Balusters",
+      "description": "Traditional wood style",
+      "price": "$80/ft",
+      "category": "traditional",
+      "popular": false,
+      "image": "/images/railings/Group 50.png"
+    },
+    {
+      "id": 4,
+      "name": "Aluminum",
+      "description": "Lightweight aluminum",
+      "price": "$100/ft",
+      "category": "modern",
+      "popular": true,
+      "image": "/images/railings/Group 51.png"
+    },
+    {
+      "id": 5,
+      "name": "Wrought Iron",
+      "description": "Classic iron design",
+      "price": "$200/ft",
+      "category": "traditional",
+      "popular": false,
+      "image": "/images/railings/Group 52.png"
+    },
+    {
+      "id": 6,
+      "name": "Composite",
+      "description": "Low maintenance option",
+      "price": "$90/ft",
+      "category": "modern",
+      "popular": true,
+      "image": "/images/railings/Group 53.png"
+    }
+  ]
+}
