@@ -1,0 +1,2 @@
+DROP INDEX "uq_editor_stage_balcony_no";--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_editor_stage_drop_balcony_active" ON "editor_balconies" USING btree ("job_stage_id","drop","balcony_no") WHERE "editor_balconies"."is_deleted" = false;

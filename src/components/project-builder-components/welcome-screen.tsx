@@ -1,0 +1,210 @@
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import AnimatedProjectInput from "./animated-project-input";
+
+interface WelcomeScreenProps {
+  onStart: (projectName: string) => void;
+  isTransitioning?: boolean;
+}
+
+export default function WelcomeScreen({ onStart, isTransitioning = false }: WelcomeScreenProps) {
+  const router = useRouter();
+  const [step, setStep] = useState<'welcome' | 'project-name'>('welcome');
+  const [projectName, setProjectName] = useState("");
+  const [showInput, setShowInput] = useState(false);
+  
+  const handleGetStarted = () => {
+    setShowInput(true);
+  };
+
+  const handleSubmitProjectName = () => {
+    if (projectName.trim()) {
+      onStart(projectName);
+    }
+  };
+
+  const handleBack = () => {
+    if (showInput) {
+      setShowInput(false);
+    } else {
+      router.push("/projects");
+    }
+  };
+
+  return (
+    <div className="h-full w-full flex transition-all overflow-hidden duration-700 justify-center items-center relative rounded-md">
+      {/* Background logo - top */}
+      <div className="absolute -top-[25%] left-0 right-0 h-[250%] opacity-[.05] pointer-events-none">
+        <Image 
+          src="/images/logos/Railsafe-row-2.svg" 
+          alt="" 
+          fill
+          className="object-cover scale-y-[-1]"
+        />
+      </div>
+      
+      
+      <div className="w-full max-w-[600px] transition-all duration-700 relative z-10 bg-white p-20 rounded-xl overflow-hidden">
+        {/* Back button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleBack}
+                className="absolute top-6 left-6 p-2 flex items-center bg-[#f5f5f5] gap-1 cursor-pointer text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all duration-200"
+                aria-label="Back"
+              >
+                <ArrowLeft size={14} />
+                <span className="text-xs">Back</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{showInput ? 'Back to welcome' : 'Back to dashboard'}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <AnimatePresence mode="wait">
+          {!isTransitioning ? (
+            <motion.div
+              key="welcome-content"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-8"
+            >
+              <div className="flex flex-col gap-4 items-center">
+                <motion.div
+                  initial={{ scale: 1.5, y: 100 }}
+                  animate={{ scale: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <Image 
+                    src="/images/logos/Railsafe-tag.svg" 
+                    alt="RailSafe Logo" 
+                    width={50}
+                    height={50}
+                    className="object-contain"
+                    priority
+                  />
+                </motion.div>
+                
+                <motion.div 
+                  className="flex flex-col gap-0 mb-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  <span className="text-2xl font-bold text-gray-900 text-center">
+                    Welcome to
+                  </span>
+                  <span className="text-[45px] font-bold text-gray-900 text-center leading-12">RailSpec</span>
+                </motion.div>
+                
+                <motion.p 
+                  className="text-sm text-gray-700 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  {showInput ? 'Enter your project name to continue' : 'Start creating your custom railing design'}
+                </motion.p>
+              </div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.1 }}
+              >
+                <AnimatedProjectInput
+                  showInput={showInput}
+                  projectName={projectName}
+                  isTransitioning={isTransitioning}
+                  onGetStarted={handleGetStarted}
+                  onSubmit={handleSubmitProjectName}
+                  onProjectNameChange={setProjectName}
+                />
+              </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="loading-content"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col gap-6 items-center"
+            >
+              <div className="relative w-[120px] h-[120px]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122 124.15" className="w-full h-full">
+                  {/* Single continuous outline */}
+                  <motion.path
+                    d="M121.05,70.65c.7-.4.95-.9.95-1.7v-33.43c0-.55-.15-.95-.65-1.25-5.86-3.36-11.68-6.72-17.54-10.07-7.22-4.16-14.49-8.32-21.7-12.48-6.67-3.81-13.28-7.62-19.95-11.48-.55-.3-1-.3-1.55,0-3.96,2.31-7.92,4.56-11.88,6.82C32.83,16.11,16.94,25.19,1.05,34.26c-.75.45-1.05.9-1.05,1.75v67.97c0,.8.3,1.3.95,1.7,8.62,5.26,17.29,10.53,25.91,15.79,1.35.8,2.71,1.65,4.06,2.46.85.5,1.55.1,1.6-.9V54.51c0-.55.15-.9.65-1.2,9.27-5.56,18.55-11.13,27.82-16.69.4-.25.65-.15,1,.05,8.87,5.11,17.69,10.28,26.57,15.39.15.1.25.2.45.3-.2.15-.35.2-.5.3-9.12,5.31-18.45,10.23-27.37,15.89-.55.35-.8.75-.75,1.35v33.48c0,.7.25,1.15.9,1.55,4.11,2.26,8.22,4.56,12.28,6.87,5.81,3.26,11.63,6.52,17.44,9.82.6.35,1.1.4,1.75,0,6.62-3.81,13.23-7.62,19.8-11.43,2.71-1.55,5.41-3.11,8.12-4.66.55-.3.85-.7.6-1.3-.1-.3-.45-.55-.75-.75-7.22-4.46-14.49-8.92-21.75-13.33-1.65-1-3.31-2.06-5.06-3.11.25-.15.45-.3.6-.4,8.92-5.31,17.79-10.68,26.72-15.99h0ZM30.58,120.52v.95c-1.65-1-3.21-1.95-4.71-2.86-7.77-4.71-15.54-9.47-23.31-14.18-.45-.25-.6-.55-.6-1.1V37.22c.85.5,1.6.9,2.36,1.35,8.27,4.81,16.54,9.62,24.86,14.39,1.05.6,1.4,1.2,1.4,2.41v65.16h0ZM59.7,35.11c-9.12,5.46-18.29,10.93-27.42,16.44-.45.25-.8.45-1.35.1-9.22-5.36-18.5-10.73-27.72-16.09-.05,0-.05-.05-.2-.15C22.15,24.49,41.2,13.61,60.4,2.63v31.28c0,.6-.2.9-.7,1.2h0ZM92.33,85.59c-.35.2-.6.25-.95.05-9.32-5.26-18.6-10.53-27.92-15.84-.05-.05-.1-.05-.3-.2,18.95-10.83,37.84-21.65,56.84-32.48v31.18c0,.5-.15.8-.6,1.05-8.97,5.41-17.99,10.83-27.07,16.24h0Z"
+                    fill="none"
+                    stroke="#333"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ 
+                      duration: 2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Left section fill */}
+                  <motion.path
+                    d="M30.58,120.52v.95c-1.65-1-3.21-1.95-4.71-2.86-7.77-4.71-15.54-9.47-23.31-14.18-.45-.25-.6-.55-.6-1.1V37.22c.85.5,1.6.9,2.36,1.35,8.27,4.81,16.54,9.62,24.86,14.39,1.05.6,1.4,1.2,1.4,2.41v65.16h0Z"
+                    fill="#333"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ 
+                      duration: 0.5,
+                      delay: 2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Top section fill */}
+                  <motion.path
+                    d="M59.7,35.11c-9.12,5.46-18.29,10.93-27.42,16.44-.45.25-.8.45-1.35.1-9.22-5.36-18.5-10.73-27.72-16.09-.05,0-.05-.05-.2-.15C22.15,24.49,41.2,13.61,60.4,2.63v31.28c0,.6-.2.9-.7,1.2h0Z"
+                    fill="#333"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ 
+                      duration: 0.5,
+                      delay: 2.1,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Right section fill */}
+                  <motion.path
+                    d="M92.33,85.59c-.35.2-.6.25-.95.05-9.32-5.26-18.6-10.53-27.92-15.84-.05-.05-.1-.05-.3-.2,18.95-10.83,37.84-21.65,56.84-32.48v31.18c0,.5-.15.8-.6,1.05-8.97,5.41-17.99,10.83-27.07,16.24h0Z"
+                    fill="#333"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ 
+                      duration: 0.5,
+                      delay: 2.2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </svg>
+              </div>
+              <p className="text-lg font-medium text-gray-700">
+                Gathering materials...
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}

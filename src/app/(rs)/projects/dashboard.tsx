@@ -1,0 +1,334 @@
+// /app/(rs)/projects/dashboard.tsx
+"use client"
+
+import { Package, Calendar, ArrowRight, CheckCircle2, Clock, AlertCircle, HelpCircle, MessageCircle, User, Pencil } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useState } from "react";
+
+import { OrderCard } from "@/components/dashboard-components/order-card";
+import { EmptyState } from "@/components/dashboard-components/empty-state";
+
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+
+interface employeeDetails {
+    id: number;
+    kindeUserId: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+interface customerDetails {
+    id: number;
+    company: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address1: string;
+    address2: string | null;
+    city: string;
+    state: string;
+    zip: string;
+    notes: string | null;
+    active: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+interface Order {
+    id: number;
+    jobDate: Date;
+    jobAddress: string;
+    job_number: number;
+    job_id: number;
+    stage: number;
+    design:string;
+    hasStage: boolean;
+    editorBalconyCount: number;
+    company: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    status: string;
+    revisionOptions: {
+        value: string;
+        label: string;
+    }[];
+    selectedRevisionOption: string;
+}
+
+interface DashboardProps {
+    isRailsafeEmployee: boolean;
+    employeeRow : employeeDetails | null;
+    customerRow : customerDetails | null;
+    orders : Order[] | null;
+}
+
+const PENDING_STATUSES = [
+  "Pending",
+  "Processing",
+  "draft",
+  "started",
+];
+
+
+function normalizeDateForSearch(raw: string | Date | null | undefined): string {
+  if (!raw) return "";
+
+  const s = String(raw);               // "2025-11-13 04:03:11.039455"
+  const [datePart] = s.split(" ");     // "2025-11-13"
+  return datePart;                     // we search over this
+}
+
+export default function ProjectDashboard({isRailsafeEmployee, employeeRow, customerRow, orders}:DashboardProps){
+    
+    const router = useRouter();
+    const [searchTerm, setSearchTerm] = useState("");
+    
+    const [showPlaceholder, setShowPlaceholder] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('showPlaceholder');
+            return stored === null ? true : stored === 'true';
+        }
+        return true;
+    });
+
+    useEffect(() => {
+        const handleToggle = () => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('showPlaceholder');
+            setShowPlaceholder(stored === 'true');
+        }
+        };
+
+        window.addEventListener('placeholderToggle', handleToggle);
+        return () => window.removeEventListener('placeholderToggle', handleToggle);
+    }, []);
+
+
+    // const filteredOrders = showPlaceholder ? orders : [];
+    const safeOrders = useMemo(() => orders ?? [], [orders]);
+    const totalOrdersCount = useMemo(() => safeOrders.length, [safeOrders]);
+
+    const pendingOrdersCount = useMemo(
+      () => safeOrders.filter((order) => PENDING_STATUSES.includes(order.status)).length,
+      [safeOrders]
+    );
+
+    const filteredOrders = useMemo(() => {
+      if (!showPlaceholder) return [];
+
+      const q = searchTerm.trim().toLowerCase();
+      if (!q) return safeOrders;
+
+      return safeOrders.filter(order => {
+        const valuesToCheck = [
+          order.jobAddress,
+          order.company,
+          order.firstName,
+          order.lastName,
+          order.email,
+          order.status,
+          order.design,
+          String(order.job_number),
+          String(order.stage),
+          order.jobDate ? normalizeDateForSearch(order.jobDate) : null,
+        ];
+
+        return valuesToCheck.some(value =>
+          value?.toString().toLowerCase().includes(q)
+        );
+      });
+    }, [safeOrders, showPlaceholder, searchTerm]);
+
+    const getStatusBadge = (status: string) => {
+    const statusStyles = {
+        draft: "bg-yellow-100 text-yellow-700",
+        Delivered: "bg-green-100 text-green-700",
+        Shipped: "bg-blue-100 text-blue-700",
+        Processing: "bg-yellow-100 text-yellow-700",
+        Pending: "bg-gray-100 text-gray-700"
+        };
+        return statusStyles[status as keyof typeof statusStyles] || statusStyles.Pending;
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+        case "draft":
+            return <Pencil size={16} className="text-yellow-600" />;
+        case "Delivered":
+            return <CheckCircle2 size={16} className="text-green-600" />;
+        case "Shipped":
+        case "Processing":
+            return <Clock size={16} className="text-blue-600" />;
+        case "Pending":
+            return <AlertCircle size={16} className="text-orange-600" />;
+        default:
+            return null;
+        }
+    };
+
+    console.log(employeeRow)
+
+    return (
+        <div className="flex gap-4 h-[calc(100vh-135px)]">
+      {/* Sidebar */}
+      <div className="w-[280px] rounded-md flex flex-col h-full bg-white">
+        {/* Profile Section */}
+        <div className="flex flex-col gap-3 p-4 pb-5 border-b">
+          <div className="flex items-center gap-3 bg-[#f5f5f5] rounded-md p-3">
+            <div className="w-9 h-9 bg-rail-light-blue rounded-full flex items-center justify-center">
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{(isRailsafeEmployee) ? employeeRow?.firstName + ' ' + employeeRow?.lastName : customerRow?.firstName + ' ' + customerRow?.lastName}</p>
+              <p className="text-[10px] text-gray-500">{(isRailsafeEmployee) ? employeeRow?.kindeUserId : customerRow?.email}</p>
+            </div>
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="flex flex-col gap-5 px-6 py-6">
+            {/* Account Overview */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-[11px] font-semibold text-gray-900">Overview</h3>
+              <div className="flex flex-col gap-2">
+                <div className="bg-[#f5f5f5] rounded-md px-3 py-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-rail-light-blue/10">
+                    </div>
+                    <span className="text-[11px] text-gray-500">Total Orders</span>
+                  </div>
+                  <p className="text-md font-bold text-gray-900">{totalOrdersCount}</p>
+                </div>
+                <div className="bg-[#f5f5f5] rounded-md px-3 py-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-orange-100">
+                    </div>
+                    <span className="text-[11px] text-gray-500">Pending Orders</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">{pendingOrdersCount}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-[11px] font-semibold text-gray-900">Quick Actions</h3>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => router.push('/project-builder')}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-[11px] font-medium transition-colors bg-rail-light-blue text-white hover:bg-[#333] cursor-pointer"
+                  suppressHydrationWarning
+                >
+                  <div className="p-1.5 rounded-md bg-white/20">
+                  </div>
+                  <span className="flex-1 text-left">New Project</span>
+                </button>
+                
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Help & Support */}
+        <div className="flex flex-col gap-3 px-6 pb-6 border-t pt-5">
+          <h3 className="text-[11px] font-semibold text-gray-900">Help & Support</h3>
+          <div className="flex flex-col gap-2">
+            <button
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-[11px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-50 cursor-pointer"
+              suppressHydrationWarning
+            >
+              <div className="p-1.5 rounded-md bg-gray-200">
+              </div>
+              <span className="flex-1 text-left">Help Center</span>
+            </button>
+            <button
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-[11px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-50 cursor-pointer"
+              suppressHydrationWarning
+            >
+              <div className="p-1.5 rounded-md bg-gray-200">
+              </div>
+              <span className="flex-1 text-left">Contact Support</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col gap-4 h-full">
+        {/* Header Section */}
+        <div className="bg-white rounded-md px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-900">{} </h1>
+                <span className="text-2xl">👋 Welcome</span>
+              </div>
+              <p className="text-xs text-gray-600 mt-1.5">Ready to create something amazing today?</p>
+            </div>
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex flex-col items-end">
+                  <div className="text-2xl font-bold text-gray-900 tabular-nums">
+                  </div>
+                  <div className="text-[11px] text-gray-500 font-medium">
+                  </div>
+                </div>
+                <div className="w-px h-10 bg-gray-200"></div>
+                <div className="p-2.5 rounded-lg bg-rail-light-blue/10">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Orders Section */}
+        <div className="bg-white rounded-lg p-6 flex-1 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between mb-3 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Package size={18} className="text-rail-light-blue" />
+                    <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
+                  </div>
+                  <input
+                    type="text"
+                    suppressHydrationWarning
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Filter orders…"
+                    className="..."
+                />
+                  <div
+                    aria-hidden
+                    className="text-[11px] font-medium flex items-center gap-1 invisible select-none"
+                  >
+                    View All
+                    <ArrowRight size={14} />
+                  </div>
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto">
+                  <div className="flex flex-col gap-3 pr-2">
+                    {filteredOrders != null && filteredOrders.length > 0 ? (
+                      filteredOrders.map((order) => (
+                        <OrderCard
+                          key={order.id}
+                          order={order}
+                          getStatusIcon={getStatusIcon}
+                          getStatusBadge={getStatusBadge}
+                        />
+                      ))
+                    ) : (
+                      <EmptyState />
+                    )}
+                  </div>
+                </div>
+        </div>
+      </div>
+    </div>
+    )
+}
