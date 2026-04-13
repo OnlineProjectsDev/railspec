@@ -31,7 +31,7 @@ export function NavButtonMenu({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-full"
+                    className="rounded-md bg-muted cursor-pointer"
                 >
                     <Icon className="h-[1.2rem] w-[1.2rem]" />
                     <span className="sr-only">{label}</span>

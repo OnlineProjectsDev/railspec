@@ -200,6 +200,7 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
                 <div className="bg-[#f5f5f5] rounded-md px-3 py-3 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-md bg-rail-light-blue/10">
+                      <Package size={13} className="text-rail-light-blue" />
                     </div>
                     <span className="text-[11px] text-gray-500">Total Orders</span>
                   </div>
@@ -208,6 +209,7 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
                 <div className="bg-[#f5f5f5] rounded-md px-3 py-3 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-md bg-orange-100">
+                      <Clock size={13} className="text-orange-500" />
                     </div>
                     <span className="text-[11px] text-gray-500">Pending Orders</span>
                   </div>
@@ -226,6 +228,7 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
                   suppressHydrationWarning
                 >
                   <div className="p-1.5 rounded-md bg-white/20">
+                    <Calendar size={13} className="text-white" />
                   </div>
                   <span className="flex-1 text-left">New Project</span>
                 </button>
@@ -244,6 +247,7 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
               suppressHydrationWarning
             >
               <div className="p-1.5 rounded-md bg-gray-200">
+                <HelpCircle size={13} className="text-gray-500" />
               </div>
               <span className="flex-1 text-left">Help Center</span>
             </button>
@@ -252,6 +256,7 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
               suppressHydrationWarning
             >
               <div className="p-1.5 rounded-md bg-gray-200">
+                <MessageCircle size={13} className="text-gray-500" />
               </div>
               <span className="flex-1 text-left">Contact Support</span>
             </button>
@@ -274,13 +279,16 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
             <div className="flex flex-col items-end gap-1.5">
               <div className="flex items-center gap-2.5">
                 <div className="flex flex-col items-end">
-                  <div className="text-2xl font-bold text-gray-900 tabular-nums">
+                  <div className="text-2xl font-bold text-gray-900 tabular-nums" suppressHydrationWarning>
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
-                  <div className="text-[11px] text-gray-500 font-medium">
+                  <div className="text-[11px] text-gray-500 font-medium" suppressHydrationWarning>
+                    {new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                   </div>
                 </div>
                 <div className="w-px h-10 bg-gray-200"></div>
                 <div className="p-2.5 rounded-lg bg-rail-light-blue/10">
+                  <Clock size={20} className="text-rail-light-blue" />
                 </div>
               </div>
             </div>

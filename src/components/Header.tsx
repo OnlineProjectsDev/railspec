@@ -66,7 +66,7 @@ export function Header() {
                     </div>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
 
                     {/* <NavButton href="/jobs" label="Jobs" icon={File} /> */}
                     <NavButtonMenu
@@ -103,7 +103,7 @@ export function Header() {
                         size="icon"
                         aria-label="LogOut"
                         title="LogOut"
-                        className="rounded-full"
+                        className="rounded-md bg-muted cursor-pointer"
                         asChild
                     >
                         <LogoutLink>
