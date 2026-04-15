@@ -24,15 +24,8 @@ export default function ToprailStep() {
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full">
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-semibold">Toprail</span>
-        <span className="text-xs text-muted-foreground">
-          Choose the toprail profile compatible with the selected design.
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 w-full flex-1">
+    <div className="flex flex-col gap-2 w-full flex-1">
+      <div className="grid grid-cols-2 gap-2 w-full content-start flex-1">
         {toprailOptions.map((opt, index) => {
           const isSelected = currentToprail === opt.id;
 
@@ -41,8 +34,10 @@ export default function ToprailStep() {
               key={opt.id}
               type="button"
               onClick={() => handleSelectToprail(opt.id)}
-              className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-all duration-300 overflow-hidden flex flex-col justify-between p-3 text-left ${
-                isSelected
+              className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-colors overflow-hidden flex flex-col p-2 text-left ${
+                isSelected && clashing
+                  ? "border-amber-400 bg-amber-50 shadow-sm"
+                  : isSelected
                   ? "border-rail-light-blue shadow-sm"
                   : "border-gray-200 hover:border-rail-light-blue"
               }`}
@@ -50,32 +45,25 @@ export default function ToprailStep() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2, delay: index * 0.03 }}
             >
-              {/* Image (if present) */}
               {opt.image && (
-                <div className="relative w-full aspect-square mb-2 overflow-hidden">
+                <div className="relative w-full h-16 mb-1.5">
                   <Image
                     src={opt.image}
                     alt={opt.label}
                     fill
                     className="object-contain"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 15vw"
+                    sizes="(max-width: 768px) 50vw, 33vw"
                   />
                 </div>
               )}
 
-              {/* Text labels */}
-              <div>
-                <div className="font-semibold text-xs">{opt.label}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">
-                  Code: {opt.id}
-                </div>
-              </div>
-
-              {/* Tick indicator */}
-              <div className="mt-2 flex items-center justify-end">
+              <div className="flex items-center justify-between gap-1">
+                <span className="font-semibold text-[11px]">{opt.label}</span>
                 <span
-                  className={`inline-flex items-center justify-center w-5 h-5 rounded-full border-2 text-[10px] ${
-                    isSelected
+                  className={`flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 text-[9px] ${
+                    isSelected && clashing
+                      ? "bg-amber-400 border-amber-400 text-white"
+                      : isSelected
                       ? "bg-rail-light-blue border-rail-light-blue text-white"
                       : "border-gray-300 text-gray-400"
                   }`}
@@ -89,10 +77,12 @@ export default function ToprailStep() {
       </div>
 
       {clashing && !!currentToprail && (
-        <p className="text-xs text-amber-600">
-  The selected toprail &quot;{currentToprail}&quot; is not allowed for design{" "}
-  {design ?? "this design"}. Please choose one of the recommended options.
-</p>
+        <div className="mt-auto rounded-md bg-amber-50 border border-amber-300 px-3 py-2.5 flex items-start gap-2">
+          <span className="text-amber-500 mt-0.5 text-sm leading-none">⚠</span>
+          <p className="text-xs text-amber-800 font-medium">
+            The selected toprail is not valid for design <span className="font-bold">{design ?? "this design"}</span>. Please choose one of the options below.
+          </p>
+        </div>
       )}
     </div>
   );

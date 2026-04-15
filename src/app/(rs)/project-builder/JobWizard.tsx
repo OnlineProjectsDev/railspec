@@ -38,7 +38,6 @@ import OverviewStep from "@/components/project-builder-components/steps/overview
 import ContinueToJobDialog from "@/components/ContinueToJobDialog";
 import ConfirmJobNavigationDialog from "@/components/ConfirmJobNavigationDialog";
 import { DropAnalyser } from "./previewAnalyser"
-import { balconies } from "@/db/schema";
 import { getMaxPostCentresSpacingMm } from "@/lib/jobDesignRules";
 
 
@@ -88,7 +87,7 @@ function SidebarHeader({
 
   return (
     <motion.div
-      className="p-3 border-b flex items-center justify-between"
+      className="px-4 py-3.5 border-b flex items-center justify-between"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
@@ -100,7 +99,7 @@ function SidebarHeader({
         <span className="text-sm font-semibold">{title}</span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Prev */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -109,11 +108,11 @@ function SidebarHeader({
               suppressHydrationWarning 
               onClick={onPrevStep}
               disabled={isFirst}
-              className={`w-8 h-8 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center transition-all duration-200 ${
+              className={`w-6 h-6 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center transition-all duration-200 ${
                 isFirst ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
               }`}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={12} />
             </button>
           </TooltipTrigger>
           {!isFirst && (
@@ -131,13 +130,13 @@ function SidebarHeader({
               suppressHydrationWarning 
               onClick={onNextStep}
               disabled={!canProceed || isLast}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${
                 !isLast && canProceed
                   ? "bg-rail-light-blue hover:bg-[#2a2a2a] text-white cursor-pointer"
                   : "bg-gray-400 text-gray-200 cursor-not-allowed"
               }`}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={12} />
             </button>
           </TooltipTrigger>
           {!isLast && (
@@ -643,10 +642,7 @@ export default function JobWizard({
     // console.log(selectedColour)
 
   return (
-
-    <div className="p-4 flex flex-col gap-4 h-screen">
-              {/* Main content area - gray background */}
-              <div className={`flex flex-col gap-4 flex-1 min-h-0 min-w-0 bg-[#f5f5f5] rounded-md ${builderState !== 'welcome' ? '' : ''}`}>
+              <div className={`flex-1 min-h-0 flex flex-col gap-4 min-w-0 ${builderState !== 'welcome' ? '' : ''}` }>
                 {/* Header - shows skeleton when loading */}
                 {builderState === 'welcome' || builderState === 'transitioning' ? null : builderState === 'loading' ? (
                   <HeaderSkeleton />
@@ -674,7 +670,7 @@ export default function JobWizard({
                   ) : builderState === 'loading' ? (
                     <SidebarSkeleton />
                   ) : (
-                    <div className="bg-white rounded-md flex flex-col w-[30%] flex-shrink-0 h-full min-h-0">
+                    <div className="bg-white rounded-md flex flex-col w-[26%] flex-shrink-0 min-h-0">
                         {/* Header stays fixed */}
                         <SidebarHeader
                         currentStep={currentStep}
@@ -715,6 +711,7 @@ export default function JobWizard({
                             onSubmit={form.handleSubmit(submitForm)}
                             className="flex-1 flex flex-col min-h-0"
                         >
+                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                             <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentStep}
@@ -722,7 +719,7 @@ export default function JobWizard({
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.25 }}
-                                className="flex-1 min-h-0 overflow-y-auto px-3 pb-3"
+                                className="min-h-full px-4 pt-3 pb-4 flex flex-col"
                             >
                                 {currentStep === 1 && (
                                 <MainProjectDetailsStep
@@ -753,6 +750,7 @@ export default function JobWizard({
 
                             </motion.div>
                             </AnimatePresence>
+                            </div>
 
                             {currentStep === 8 && (
                                 <div className="mt-4 w-full">
@@ -824,8 +822,6 @@ export default function JobWizard({
                   )}
                 </div>
               </div>
-            </div>
 
-    
   );
 }

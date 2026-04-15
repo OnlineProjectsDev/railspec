@@ -1,9 +1,25 @@
 // /components/dashboard-components/order-card.tsx
 "use client";
 
-import { Crop, FileText, LayoutTemplate, ListTree, Palette, PenTool, Ruler } from "lucide-react";
+import { Crop, FileText, LayoutTemplate, ListTree, Palette, PenTool, Ruler, MoreHorizontal, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, MouseEvent, ReactElement, useMemo, useState } from "react";
+import { ReactElement, useMemo, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Order {
   id: number;
@@ -32,14 +48,6 @@ interface OrderCardProps {
   getStatusIcon: (status: string) => ReactElement | null;
   getStatusBadge: (status: string) => string;
 }
-
-type ActionDef = {
-  key: string;
-  title: string;
-  href: string;
-  newTab?: boolean;
-  Icon: typeof PenTool;
-};
 
 export function OrderCard({ order, getStatusIcon, getStatusBadge }: OrderCardProps) {
   const router = useRouter();
@@ -74,38 +82,17 @@ export function OrderCard({ order, getStatusIcon, getStatusBadge }: OrderCardPro
       : `/fabrication/raw/${order.job_number}/${order.stage}/${sheetOption}`;
   }
 
-  const actions: ActionDef[] = [
-    {
-      key: "editor",
-      title: hasEditorBalconies ? "Open Editor" : "Add Balcony",
-      href: getEditorHref(),
-      Icon: PenTool,
-    },
-    { key: "shopdrawings", title: "Shop Drawings", href: getShopDrawingsHref(), Icon: LayoutTemplate },
-    { key: "shopdrawings-print", title: "Shop Drawings – Print / PDF", href: getShopDrawingsPrintHref(), newTab: true, Icon: FileText },
-    { key: "cuttingsheet", title: "Cuttingsheet", href: getFabricationHref("cutting"), newTab: true, Icon: Ruler },
-    { key: "glass-order", title: "Glass Order", href: getFabricationHref("glass"), newTab: true, Icon: Crop },
-    { key: "powdercoat-order", title: "Powdercoat Order", href: getFabricationHref("powdercoat"), newTab: true, Icon: Palette },
-    { key: "components-list", title: "Components List", href: getFabricationHref("components"), newTab: true, Icon: ListTree },
-  ];
-
-  const onRevisionChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    e.stopPropagation();
-    setSelectedRevisionOption(e.target.value);
+  const onRevisionChange = (value: string) => {
+    setSelectedRevisionOption(value);
   };
 
-  const onActionClick = (e: MouseEvent, href: string, newTab?: boolean, disabled?: boolean) => {
-    e.preventDefault();
+  const handleAction = (e: React.MouseEvent, href: string, newTab?: boolean) => {
     e.stopPropagation();
-
-    if (disabled) return;
-
     if (newTab) {
       window.open(href, "_blank", "noopener,noreferrer");
-      return;
+    } else {
+      router.push(href);
     }
-
-    router.push(href);
   };
 
   return (
@@ -114,77 +101,153 @@ export function OrderCard({ order, getStatusIcon, getStatusBadge }: OrderCardPro
       onClick={() => router.push(getEditorHref())}
     >
       <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center w-10 h-10 bg-rail-light-blue/10 rounded-md">
+        <div className="flex items-center justify-center w-10 h-10 bg-rail-light-blue/10 rounded-md flex-shrink-0">
           {getStatusIcon(order.status)}
         </div>
-        <div>
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-semibold text-gray-900">{order.jobAddress}</p>
-          <p className="text-[11px] text-gray-500">
-            {order.company} - {order.firstName} {order.lastName}
-          </p>
+          <span className="text-gray-300 text-xs">|</span>
+          <p className="text-[11px] text-gray-500">{order.company} · {order.firstName} {order.lastName}</p>
+          <span className="text-gray-300 text-xs">|</span>
+          <p className="text-[10px] text-gray-400">{new Date(order.jobDate as any).toLocaleDateString("en-AU", { dateStyle: "medium" })}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="text-right">
-          <p className="text-xs font-semibold text-gray-900">{order.job_number + " - Stage " + order.stage + " : " + order.design}</p>
-          <p className="text-[10px] text-gray-500">
-            {new Date(order.jobDate as any).toLocaleDateString("en-AU", { dateStyle: "medium" })}
-          </p>
+      <div className="flex items-center gap-3">
+        {/* Job + stage + design badges */}
+        <div className="flex items-center gap-1.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="px-2 py-0.5 rounded-md bg-gray-200 text-gray-700 text-[10px] font-semibold tabular-nums cursor-default">
+                #{order.job_number}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Job Number</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="px-2 py-0.5 rounded-md bg-rail-light-blue/10 text-rail-light-blue text-[10px] font-semibold cursor-default">
+                Stage {order.stage}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Stage</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[10px] font-medium cursor-default">
+                {order.design}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Design Type</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium ${getStatusBadge(order.status)}`}>
-            {order.status}
-          </span>
 
-          <select
+          <Select
             value={selectedRevisionOption}
-            onChange={onRevisionChange}
-            onClick={(e) => e.stopPropagation()}
-            className="h-8 rounded-md border bg-white px-2 text-[11px]"
-            suppressHydrationWarning
+            onValueChange={onRevisionChange}
           >
-            {order.revisionOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              onClick={(e) => e.stopPropagation()}
+              className="h-8 w-[110px] text-[10px] border rounded-md bg-white"
+              suppressHydrationWarning
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent onClick={(e) => e.stopPropagation()} className="w-48">
+              {order.revisionOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="text-[11px]">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Actions row (always visible; disabled when no linked data) */}
-        <div className="flex items-center gap-1.5">
-          {actions.map((a) => {
-            const disabled =
-            a.key === "editor"
-              ? !hasStage
-              : !hasEditorBalconies;
-            const Icon = a.Icon;
-
-            return (
-              <button
-                key={a.key}
-                type="button"
-                title={
-                  disabled
-                    ? `${a.title} (disabled)`
-                    : a.title
-                }
-                onClick={(e) => onActionClick(e, a.href, a.newTab, disabled)}
-                className={`h-8 w-8 rounded-md transition-colors flex items-center justify-center ${
-                  disabled
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-[#333]/30 hover:bg-[#333]/50 text-white cursor-pointer"
-                }`}
-                aria-disabled={disabled}
-                suppressHydrationWarning
-              >
-                <Icon size={16} />
-              </button>
-            );
-          })}
-        </div>
+        {/* Actions dropdown */}
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-8 w-8 rounded-md bg-rail-light-blue hover:bg-rail-light-blue/80 text-white transition-colors flex items-center justify-center cursor-pointer"
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Actions</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuLabel className="text-[11px]">Design</DropdownMenuLabel>
+            <DropdownMenuItem
+              disabled={!hasStage}
+              onSelect={(e) => { if (hasStage) router.push(getEditorHref()); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <PenTool size={13} />
+              {hasEditorBalconies ? "Open Editor" : "Add Balcony"}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!hasEditorBalconies}
+              onSelect={() => { if (hasEditorBalconies) router.push(getShopDrawingsHref()); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <LayoutTemplate size={13} />
+              Shop Drawings
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!hasEditorBalconies}
+              onSelect={() => { if (hasEditorBalconies) window.open(getShopDrawingsPrintHref(), "_blank", "noopener,noreferrer"); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <FileText size={13} />
+              Shop Drawings — Print / PDF
+              <ExternalLink size={11} className="ml-auto text-gray-400" />
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-[11px]">Fabrication</DropdownMenuLabel>
+            <DropdownMenuItem
+              disabled={!hasEditorBalconies}
+              onSelect={() => { if (hasEditorBalconies) window.open(getFabricationHref("cutting"), "_blank", "noopener,noreferrer"); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <Ruler size={13} />
+              Cutting Sheet
+              <ExternalLink size={11} className="ml-auto text-gray-400" />
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!hasEditorBalconies}
+              onSelect={() => { if (hasEditorBalconies) window.open(getFabricationHref("glass"), "_blank", "noopener,noreferrer"); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <Crop size={13} />
+              Glass Order
+              <ExternalLink size={11} className="ml-auto text-gray-400" />
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!hasEditorBalconies}
+              onSelect={() => { if (hasEditorBalconies) window.open(getFabricationHref("powdercoat"), "_blank", "noopener,noreferrer"); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <Palette size={13} />
+              Powdercoat Order
+              <ExternalLink size={11} className="ml-auto text-gray-400" />
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!hasEditorBalconies}
+              onSelect={() => { if (hasEditorBalconies) window.open(getFabricationHref("components"), "_blank", "noopener,noreferrer"); }}
+              className="text-[11px] gap-2 cursor-pointer"
+            >
+              <ListTree size={13} />
+              Components List
+              <ExternalLink size={11} className="ml-auto text-gray-400" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

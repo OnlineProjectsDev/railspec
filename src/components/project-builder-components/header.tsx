@@ -93,7 +93,7 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
   };
 
   return (
-    <div className="px-4 py-3 flex w-full justify-between items-center mx-auto bg-white rounded-[10px]">
+    <div className="px-6 py-2.5 flex w-full justify-between items-center mx-auto bg-white rounded-[10px]">
       <div className="flex gap-8 items-center w-full justify-between">
         <div className="flex gap-4 items-center">
           <AlertDialog open={showHomeDialog} onOpenChange={setShowHomeDialog}>
@@ -102,10 +102,10 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
                 <TooltipTrigger asChild>
                   <button
                     suppressHydrationWarning 
-                    className="bg-rail-light-blue p-[9px] text-white rounded-[5px] flex items-center justify-center hover:bg-[#333333] transition-colors"
+                    className="bg-rail-light-blue p-[6px] text-white rounded-[5px] flex items-center justify-center hover:bg-[#333333] transition-colors"
                     aria-label="Go to dashboard"
                   >
-                    <Home size={14} />
+                    <Home size={12} />
                   </button>
                 </TooltipTrigger>
               </AlertDialogTrigger>
@@ -196,10 +196,10 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
                 <TooltipTrigger asChild>
                   <button
                     suppressHydrationWarning 
-                    className="bg-rail-light-blue p-[9px] text-white rounded-[5px] flex items-center justify-center hover:bg-[#333333] transition-colors"
+                    className="bg-rail-light-blue p-[6px] text-white rounded-[5px] flex items-center justify-center hover:bg-[#333333] transition-colors"
                     aria-label="Reset design"
                   >
-                    <RotateCcw size={14} className={`transition-transform duration-300 ${isSpinning ? 'rotate-360' : 'rotate-0'}`} />
+                    <RotateCcw size={12} className={`transition-transform duration-300 ${isSpinning ? 'rotate-360' : 'rotate-0'}`} />
                   </button>
                 </TooltipTrigger>
               </AlertDialogTrigger>

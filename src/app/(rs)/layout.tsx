@@ -6,11 +6,13 @@ export default async function RSLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="w-full h-screen bg-white p-4">
+        <div className="w-full h-screen p-4">
             
-            <div className="p-4 bg-[#f5f5f5] rounded-xl flex flex-col gap-4">
+            <div className="h-full bg-[#f5f5f5] rounded-xl flex flex-col p-4 overflow-hidden">
                 <Header />
-                {children}
+                <div className="flex-1 min-h-0 flex flex-col overflow-hidden mt-4">
+                    {children}
+                </div>
             </div>
         </div>
     )

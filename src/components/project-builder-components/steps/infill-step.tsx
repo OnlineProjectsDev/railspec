@@ -32,9 +32,9 @@ const handleSelectInfill = (id: string) => {
 
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-3 w-full flex-1">
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-semibold">Infill</span>
+
         <span className="text-xs text-muted-foreground">
           {requiresGlass
             ? "This design requires glass. Choose an appropriate glass thickness and type."
@@ -42,7 +42,7 @@ const handleSelectInfill = (id: string) => {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 w-full flex-1">
+      <div className="flex flex-col gap-2 w-full flex-1 justify-center">
         {infillOptions.map((opt, index) => {
   const isSelected = currentInfill === opt.id;
 
@@ -51,8 +51,10 @@ const handleSelectInfill = (id: string) => {
       key={opt.id}
       type="button"
       onClick={() => handleSelectInfill(opt.id)}
-      className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-all duration-300 overflow-hidden flex flex-col justify-between p-3 text-left ${
-        isSelected
+      className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-colors overflow-hidden flex items-center justify-between p-2.5 text-left ${
+        isSelected && clashing
+          ? "border-amber-400 bg-amber-50 shadow-sm"
+          : isSelected
           ? "border-rail-light-blue shadow-sm"
           : "border-gray-200 hover:border-rail-light-blue"
       }`}
@@ -60,40 +62,42 @@ const handleSelectInfill = (id: string) => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.2, delay: index * 0.03 }}
     >
-      <div>
-        <div className="font-semibold text-xs">{opt.label}</div>
-      </div>
+      <div className="font-semibold text-[11px]">{opt.label}</div>
 
-      <div className="mt-2 flex items-center justify-end">
-        <span
-          className={`inline-flex items-center justify-center w-5 h-5 rounded-full border-2 text-[10px] ${
-            isSelected
-              ? "bg-rail-light-blue border-rail-light-blue text-white"
-              : "border-gray-300 text-gray-400"
-          }`}
-        >
-          {isSelected ? "✓" : ""}
-        </span>
-      </div>
+      <span
+        className={`flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 text-[9px] ${
+          isSelected && clashing
+            ? "bg-amber-400 border-amber-400 text-white"
+            : isSelected
+            ? "bg-rail-light-blue border-rail-light-blue text-white"
+            : "border-gray-300 text-gray-400"
+        }`}
+      >
+        {isSelected ? "✓" : ""}
+      </span>
     </motion.button>
   );
 })}
 
       </div>
 
-      {/* Warnings for glass-required designs */}
-      {!currentInfill && (
-        <p className="text-xs text-red-600">
-          Please select an infill option to continue.
-        </p>
-      )}
+      {/* Warnings — pinned to bottom via mt-auto */}
+      <div className="mt-auto flex flex-col gap-2">
+        {!currentInfill && (
+          <p className="text-xs text-red-600">
+            Please select an infill option to continue.
+          </p>
+        )}
 
-      {clashing && !!currentInfill && (
-        <p className="text-xs text-amber-600">
-          The selected infill is not valid for design {design ?? "this design"}.
-          Please choose one of the recommended options.
-        </p>
-      )}
+        {clashing && !!currentInfill && (
+          <div className="rounded-md bg-amber-50 border border-amber-300 px-3 py-2.5 flex items-start gap-2">
+            <span className="text-amber-500 mt-0.5 text-sm leading-none">⚠</span>
+            <p className="text-xs text-amber-800 font-medium">
+              The selected infill is not valid for design <span className="font-bold">{design ?? "this design"}</span>. Please choose one of the options below.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

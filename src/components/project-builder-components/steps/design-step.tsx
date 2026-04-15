@@ -24,7 +24,7 @@ export default function DesignStep() {
   };
 
   return (
-    <div className="grid grid-cols-2 grid-rows-3 gap-4 w-full">
+    <div className="grid grid-cols-2 gap-2 w-full content-start pt-2">
       {designOptions.map((design, index) => {
         const isSelected = currentDesign === design.id;
 
@@ -33,7 +33,7 @@ export default function DesignStep() {
             key={design.id}
             type="button"
             onClick={() => handleSelectDesign(design.id)}
-            className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-all duration-300 overflow-hidden flex flex-col min-h-0 p-3 text-left ${
+            className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-colors overflow-hidden flex flex-col p-2 text-left ${
               isSelected
                 ? "border-rail-light-blue shadow-sm"
                 : "border-gray-200 hover:border-rail-light-blue"
@@ -42,9 +42,8 @@ export default function DesignStep() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: index * 0.03 }}
           >
-            {/* 🔹 Optional design image */}
             {design.image && (
-              <div className="relative w-full h-32 mb-2">
+              <div className="relative w-full h-16 mb-1.5">
                 <Image
                   src={design.image}
                   alt={design.label}
@@ -55,14 +54,10 @@ export default function DesignStep() {
               </div>
             )}
 
-            <div className="flex-1 flex flex-col justify-center">
-              <span className="font-semibold text-xs">{design.label}</span>
-              {/* Placeholder for future description / tags */}
-            </div>
-
-            <div className="mt-2 flex items-center justify-end">
+            <div className="flex items-center justify-between gap-1">
+              <span className="font-semibold text-[11px]">{design.label}</span>
               <span
-                className={`inline-flex items-center justify-center w-5 h-5 rounded-full border-2 text-[10px] ${
+                className={`flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 text-[9px] ${
                   isSelected
                     ? "bg-rail-light-blue border-rail-light-blue text-white"
                     : "border-gray-300 text-gray-400"

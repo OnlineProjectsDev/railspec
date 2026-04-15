@@ -1,7 +1,7 @@
 // /app/(rs)/projects/dashboard.tsx
 "use client"
 
-import { Package, Calendar, ArrowRight, CheckCircle2, Clock, AlertCircle, HelpCircle, MessageCircle, User, Pencil } from "lucide-react";
+import { Package, Calendar, CheckCircle2, Clock, AlertCircle, HelpCircle, MessageCircle, User, Pencil, Search, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 
@@ -89,6 +89,8 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
     
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "in-progress" | "delivered">("all");
     
     const [showPlaceholder, setShowPlaceholder] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -123,28 +125,39 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
     const filteredOrders = useMemo(() => {
       if (!showPlaceholder) return [];
 
+      let result = safeOrders;
+
+      if (statusFilter === "pending") {
+        result = result.filter(o => o.status === "Pending");
+      } else if (statusFilter === "in-progress") {
+        result = result.filter(o => ["Processing", "Shipped", "draft", "started"].includes(o.status));
+      } else if (statusFilter === "delivered") {
+        result = result.filter(o => o.status === "Delivered");
+      }
+
       const q = searchTerm.trim().toLowerCase();
-      if (!q) return safeOrders;
+      if (q) {
+        result = result.filter(order => {
+          const valuesToCheck = [
+            order.jobAddress,
+            order.company,
+            order.firstName,
+            order.lastName,
+            order.email,
+            order.status,
+            order.design,
+            String(order.job_number),
+            String(order.stage),
+            order.jobDate ? normalizeDateForSearch(order.jobDate) : null,
+          ];
+          return valuesToCheck.some(value =>
+            value?.toString().toLowerCase().includes(q)
+          );
+        });
+      }
 
-      return safeOrders.filter(order => {
-        const valuesToCheck = [
-          order.jobAddress,
-          order.company,
-          order.firstName,
-          order.lastName,
-          order.email,
-          order.status,
-          order.design,
-          String(order.job_number),
-          String(order.stage),
-          order.jobDate ? normalizeDateForSearch(order.jobDate) : null,
-        ];
-
-        return valuesToCheck.some(value =>
-          value?.toString().toLowerCase().includes(q)
-        );
-      });
-    }, [safeOrders, showPlaceholder, searchTerm]);
+      return result;
+    }, [safeOrders, showPlaceholder, searchTerm, statusFilter]);
 
     const getStatusBadge = (status: string) => {
     const statusStyles = {
@@ -176,9 +189,9 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
     console.log(employeeRow)
 
     return (
-        <div className="flex gap-4 h-[calc(100vh-135px)]">
+        <div className="flex gap-4 flex-1 min-h-0">
       {/* Sidebar */}
-      <div className="w-[280px] rounded-md flex flex-col h-full bg-white">
+      <div className="w-[280px] rounded-md flex flex-col min-h-0 bg-white">
         {/* Profile Section */}
         <div className="flex flex-col gap-3 p-4 pb-5 border-b">
           <div className="flex items-center gap-3 bg-[#f5f5f5] rounded-md p-3">
@@ -280,10 +293,10 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
               <div className="flex items-center gap-2.5">
                 <div className="flex flex-col items-end">
                   <div className="text-2xl font-bold text-gray-900 tabular-nums" suppressHydrationWarning>
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                   </div>
                   <div className="text-[11px] text-gray-500 font-medium" suppressHydrationWarning>
-                    {new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                    {new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>
                 </div>
                 <div className="w-px h-10 bg-gray-200"></div>
@@ -297,29 +310,78 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
 
         {/* Recent Orders Section */}
         <div className="bg-white rounded-lg p-6 flex-1 flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-3 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Package size={18} className="text-rail-light-blue" />
-                    <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-                  </div>
-                  <input
-                    type="text"
-                    suppressHydrationWarning
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Filter orders…"
-                    className="..."
-                />
-                  <div
-                    aria-hidden
-                    className="text-[11px] font-medium flex items-center gap-1 invisible select-none"
-                  >
-                    View All
-                    <ArrowRight size={14} />
+                <div className="flex flex-col gap-2 mb-3 pb-3 border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Package size={18} className="text-rail-light-blue" />
+                      <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Status filter pills */}
+                      <div className="flex items-center gap-1">
+                        {([
+                          { key: "all", label: "All" },
+                          { key: "pending", label: "Pending" },
+                          { key: "in-progress", label: "In Progress" },
+                          { key: "delivered", label: "Delivered" },
+                        ] as const).map(({ key, label }) => (
+                          <button
+                            key={key}
+                            onClick={() => setStatusFilter(key)}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors cursor-pointer ${
+                              statusFilter === key
+                                ? "bg-rail-light-blue text-white"
+                                : "bg-[#f5f5f5] text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Search — expands inline from the icon */}
+                      <div className={`flex items-center gap-1.5 rounded-md overflow-hidden transition-all duration-200 ${
+                        searchOpen ? "bg-[#f5f5f5] ring-2 ring-rail-light-blue w-52" : "bg-transparent w-7"
+                      }`}>
+                        <button
+                          onClick={() => {
+                            setSearchOpen(o => {
+                              if (o) setSearchTerm("");
+                              return !o;
+                            });
+                          }}
+                          className={`flex-shrink-0 p-1.5 rounded-md transition-colors cursor-pointer ${
+                            searchOpen
+                              ? "text-rail-light-blue"
+                              : "bg-[#f5f5f5] text-gray-500 hover:bg-gray-200"
+                          }`}
+                        >
+                          <Search size={13} />
+                        </button>
+                        {searchOpen && (
+                          <input
+                            autoFocus
+                            type="text"
+                            suppressHydrationWarning
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search…"
+                            className="flex-1 py-1.5 pr-2 text-[11px] bg-transparent border-none focus:outline-none min-w-0"
+                          />
+                        )}
+                        {searchOpen && searchTerm && (
+                          <button
+                            onClick={() => setSearchTerm("")}
+                            className="flex-shrink-0 pr-1.5 text-gray-400 hover:text-gray-600 cursor-pointer"
+                          >
+                            <X size={11} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="flex flex-col gap-3 pr-2">
                     {filteredOrders != null && filteredOrders.length > 0 ? (
                       filteredOrders.map((order) => (
@@ -334,7 +396,7 @@ export default function ProjectDashboard({isRailsafeEmployee, employeeRow, custo
                       <EmptyState />
                     )}
                   </div>
-                </div>
+                </ScrollArea>
         </div>
       </div>
     </div>
