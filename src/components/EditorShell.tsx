@@ -2,6 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import Canvas2D from "./Canvas2D"
 import Canvas3D from "./Canvas3D"
 import LeftPanel from "./LeftPanel"
@@ -105,17 +106,21 @@ export default function EditorShell({
         <button
           type="button"
           className={styles.btn}
+          title={leftPanelCollapsed ? "Show panel" : "Hide panel"}
           onClick={() => setLeftPanelCollapsed((v) => !v)}
           style={{
             position: "absolute",
-            top: 400,
+            top: 12,
             left: 12,
             zIndex: 40,
-            padding: "10px 12px",
+            padding: "8px",
             background: "#FFFFFF",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {leftPanelCollapsed ? ">" : "<"}
+          {leftPanelCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
 
         {state.view === "2d" ? (

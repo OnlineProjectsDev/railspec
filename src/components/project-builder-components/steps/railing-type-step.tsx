@@ -1,6 +1,5 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -58,7 +57,7 @@ export default function RailingTypeStep({ selectedRailingType, onSelect }: Raili
   };
 
   return (
-    <div className="grid grid-cols-2 grid-rows-3 gap-4 w-full h-full">
+    <div className="grid grid-cols-2 gap-2 w-full content-start flex-1">
       {loading ? (
         Array.from({ length: 6 }).map((_, index) => (
           <motion.div 
@@ -78,15 +77,18 @@ export default function RailingTypeStep({ selectedRailingType, onSelect }: Raili
           </motion.div>
         ))
       ) : (
-        railingTypes.map((railing) => (
-          <div 
-            key={railing.id} 
+        railingTypes.map((railing, index) => (
+          <motion.div
+            key={railing.id}
             onClick={() => handleRailingSelect(railing.id)}
-            className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-all duration-500 overflow-hidden group flex flex-col min-h-0 ${
-              selectedRailingType === railing.id 
-                ? 'border-rail-light-blue border' 
+            className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-all duration-300 overflow-hidden flex flex-col min-h-0 ${
+              selectedRailingType === railing.id
+                ? 'border-rail-light-blue shadow-sm'
                 : 'border-gray-200 hover:border-rail-light-blue'
             }`}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2, delay: index * 0.03 }}
           >
             <div className="relative flex-1 w-full min-h-0">
               <Image
@@ -100,20 +102,18 @@ export default function RailingTypeStep({ selectedRailingType, onSelect }: Raili
             <div className="p-3 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-xs">{railing.name}</h4>
-                <div 
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    selectedRailingType === railing.id 
-                      ? 'bg-rail-light-blue border-rail-light-blue' 
-                      : 'border-gray-300 group-hover:bg-rail-light-blue group-hover:border-rail-light-blue'
+                <span
+                  className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full border-2 text-[10px] ${
+                    selectedRailingType === railing.id
+                      ? 'bg-rail-light-blue border-rail-light-blue text-white'
+                      : 'border-gray-300 text-gray-400'
                   }`}
                 >
-                  <Plus size={12} className={`transition-colors ${
-                    selectedRailingType === railing.id ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                  }`} />
-                </div>
+                  {selectedRailingType === railing.id ? '✓' : ''}
+                </span>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))
       )}
     </div>

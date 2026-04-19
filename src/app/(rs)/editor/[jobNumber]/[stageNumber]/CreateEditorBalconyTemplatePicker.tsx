@@ -160,10 +160,10 @@ export default function CreateEditorBalconyTemplatePicker({
     });
   }
 
-  if (!templates.length) {
+  if (!compatibleTemplates.length) {
     return (
-      <div className="text-sm text-muted-foreground">
-        No templates are available.
+      <div className="text-[11px] text-muted-foreground">
+        No compatible templates for this stage’s settings.
       </div>
     );
   }
@@ -179,165 +179,130 @@ export default function CreateEditorBalconyTemplatePicker({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3">
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {templates.map((item) => {
-          const template = item.template;
-          const selected = template.id === selectedTemplateId;
-          const disabled = !item.compatible;
-
-          return (
-            <button
-              key={template.id}
-              type="button"
-              suppressHydrationWarning
-              onClick={() => {
-                if (disabled) return;
-                setSelectedTemplateId(template.id);
-              }}
-              disabled={disabled}
-              className={`w-64 shrink-0 rounded-md border px-3 py-3 text-left transition-colors ${
-                disabled
-                  ? "border-border bg-muted/30 text-muted-foreground cursor-not-allowed opacity-70"
-                  : selected
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:bg-muted/50"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="font-medium">{template.label}</div>
-                <div className="text-[11px] uppercase tracking-wide">
-                  {item.compatible ? "Compatible" : "Unavailable"}
+      <div className="flex flex-col gap-2.5">
+        {/* Template cards */}
+        <div className="grid grid-cols-1 gap-2 w-full">
+          {compatibleTemplates.map((item) => {
+            const template = item.template;
+            const isSelected = template.id === selectedTemplateId;
+            return (
+              <button
+                key={template.id}
+                type="button"
+                suppressHydrationWarning
+                onClick={() => setSelectedTemplateId(template.id)}
+                className={`bg-[#f5f5f5] border rounded-lg cursor-pointer transition-colors flex flex-col p-2.5 text-left ${
+                  isSelected
+                    ? "border-rail-light-blue shadow-sm"
+                    : "border-gray-200 hover:border-rail-light-blue"
+                }`}
+              >
+                <div className="font-semibold text-[12px] mb-1">{template.label}</div>
+                <div className="text-[11px] text-gray-500 leading-snug flex-1 mb-2 min-h-[2.5rem]">
+                  {template.description ?? "—"}
                 </div>
-              </div>
-
-              {template.description ? (
-                <div className="text-xs text-muted-foreground mt-1">
-                  {template.description}
+                <div className="flex items-center justify-between gap-1">
+                  <div className="text-[10px] text-gray-400 leading-snug">
+                    {template.tags.family}
+                    {template.tags.designs.length ? ` · ${template.tags.designs.join(", ")}` : ""}
+                    {template.tags.anchorages.length ? ` · ${template.tags.anchorages.join(", ")}` : ""}
+                  </div>
+                  <span
+                    className={`flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 text-[9px] ${
+                      isSelected
+                        ? "bg-rail-light-blue border-rail-light-blue text-white"
+                        : "border-gray-300 text-gray-400"
+                    }`}
+                  >
+                    {isSelected ? "✓" : ""}
+                  </span>
                 </div>
-              ) : null}
-
-              <div className="text-xs text-muted-foreground mt-2">
-                {template.tags.family} • {template.tags.designs.join(", ")} • {template.tags.anchorages.join(", ")}
-              </div>
-
-              {!item.compatible && item.reasons.length > 0 ? (
-                <div className="text-xs text-amber-600 mt-2">
-                  {item.reasons.join(" • ")}
-                </div>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="text-xs text-muted-foreground">
-          New balcony: Drop {nextDrop} — Balcony {nextBalconyNo}
-          {selectedTemplate ? ` • Template: ${selectedTemplate.template.label}` : ""}
+              </button>
+            );
+          })}
         </div>
 
+        {/* Naming form or create button */}
         {isNamingNewBalcony ? (
-          <div className="flex flex-col gap-3 rounded-md border p-3">
-            <div className="flex gap-2">
-              <div className="flex flex-col gap-1">
-                <input
-                  className="w-24 rounded-md border px-3 py-2 text-sm"
-                  value={draft.drop}
-                  suppressHydrationWarning
-                  onChange={(e) => {
-                    setDraft((current) => ({ ...current, drop: e.target.value }));
-                    setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
-                  }}
-                />
-                {localFieldErrors.drop ? (
-                  <div className="text-xs text-red-600">
-                    {localFieldErrors.drop}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <input
-                  className="w-32 rounded-md border px-3 py-2 text-sm"
-                  value={draft.balconyNo}
-                  suppressHydrationWarning
-                  onChange={(e) => {
-                    setDraft((current) => ({ ...current, balconyNo: e.target.value }));
-                    setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
-                  }}
-                />
-                {localFieldErrors.balconyNo ? (
-                  <div className="text-xs text-red-600">
-                    {localFieldErrors.balconyNo}
-                  </div>
-                ) : liveBalconyNoError ? (
-                  <div className="text-xs text-red-600">
-                    {liveBalconyNoError}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="text-xs text-muted-foreground">
-              Names must remain unique among non-deleted balconies on this stage.
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                onClick={confirmCreateFromTemplate}
-                disabled={
-                  isPending ||
-                  !draft.drop.trim() ||
-                  !draft.balconyNo.trim() ||
-                  !!localFieldErrors.drop ||
-                  !!localFieldErrors.balconyNo ||
-                  !!liveBalconyNoError ||
-                  !selectedTemplateId ||
-                  !selectedTemplate?.compatible
-                }
+          <div className="flex flex-wrap items-end gap-2 rounded-md border bg-gray-50 p-2.5">
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Drop</div>
+              <input
+                className="w-20 rounded-md border bg-white px-2.5 py-1.5 text-sm"
+                value={draft.drop}
                 suppressHydrationWarning
-              >
-                {isPending ? (
-                  <>
-                    <LoaderCircle className="animate-spin" />
-                    Creating
-                  </>
-                ) : (
-                  <>
-                    <Save />
-                    Create From Template
-                  </>
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={cancelCreateFromTemplate}
-                disabled={isPending}
-                suppressHydrationWarning
-              >
-                <X />
-                Cancel
-              </Button>
+                onChange={(e) => {
+                  setDraft((current) => ({ ...current, drop: e.target.value }));
+                  setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
+                }}
+              />
+              {localFieldErrors.drop ? (
+                <div className="text-xs text-red-600">{localFieldErrors.drop}</div>
+              ) : null}
             </div>
-          </div>
-        ) : (
-          <div className="flex justify-end">
+
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Balcony</div>
+              <input
+                className="w-28 rounded-md border bg-white px-2.5 py-1.5 text-sm"
+                value={draft.balconyNo}
+                suppressHydrationWarning
+                onChange={(e) => {
+                  setDraft((current) => ({ ...current, balconyNo: e.target.value }));
+                  setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
+                }}
+              />
+              {localFieldErrors.balconyNo ? (
+                <div className="text-xs text-red-600">{localFieldErrors.balconyNo}</div>
+              ) : liveBalconyNoError ? (
+                <div className="text-xs text-red-600">{liveBalconyNoError}</div>
+              ) : null}
+            </div>
+
             <Button
               type="button"
-              onClick={startCreateFromTemplate}
-              disabled={isPending || !selectedTemplateId || !selectedTemplate?.compatible}
+              size="sm"
+              onClick={confirmCreateFromTemplate}
+              disabled={
+                isPending ||
+                !draft.drop.trim() ||
+                !draft.balconyNo.trim() ||
+                !!localFieldErrors.drop ||
+                !!localFieldErrors.balconyNo ||
+                !!liveBalconyNoError ||
+                !selectedTemplateId ||
+                !selectedTemplate?.compatible
+              }
               suppressHydrationWarning
             >
-              <Plus />
-              Create From Template
+              {isPending ? <LoaderCircle className="animate-spin h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+              Create
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={cancelCreateFromTemplate}
+              disabled={isPending}
+              suppressHydrationWarning
+            >
+              <X className="h-3.5 w-3.5" />
+              Cancel
             </Button>
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={startCreateFromTemplate}
+            disabled={isPending || !selectedTemplateId || !selectedTemplate?.compatible}
+            suppressHydrationWarning
+            className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-gray-300 py-2 text-[11px] font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Plus className="h-3 w-3" />
+            Create from template
+          </button>
         )}
-      </div>
       </div>
     </>
   );

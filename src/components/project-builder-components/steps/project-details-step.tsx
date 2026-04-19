@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProjectDetailsStepProps {
   selectedData: {
@@ -44,7 +45,7 @@ export default function ProjectDetailsStep({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <ScrollArea className="flex-1 min-h-0">
         <div className="space-y-4">
           {/* Project Information */}
           <div>
@@ -64,13 +65,13 @@ export default function ProjectDetailsStep({
                   value={formData.projectName}
                   onChange={handleInputChange}
                   placeholder="e.g., Marina Village Deck"
-                  className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-rail-light-blue focus:border-transparent"
+                  className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md outline-none"
                 />
               </div>
             </div>
           </div>
 
-          {/* Client Information */}
+          {/* Client Information */
           <div>
             <h3 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <User size={14} className="text-rail-light-blue" />
@@ -88,13 +89,13 @@ export default function ProjectDetailsStep({
                   value={formData.clientName}
                   onChange={handleInputChange}
                   placeholder="e.g., John Smith"
-                  className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-rail-light-blue focus:border-transparent"
+                  className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md outline-none"
                 />
               </div>
             </div>
           </div>
 
-          {/* Timeline */}
+          {/* Timeline */
           <div>
             <h3 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-2">
               <CalendarIcon size={14} className="text-rail-light-blue" />
@@ -108,7 +109,7 @@ export default function ProjectDetailsStep({
                 <PopoverTrigger asChild>
                   <button
                     className={cn(
-                      "w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-rail-light-blue focus:border-transparent text-left cursor-pointer",
+                      "w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-md outline-none text-left cursor-pointer",
                       !formData.dueDate && "text-gray-400"
                     )}
                   >
@@ -148,7 +149,7 @@ export default function ProjectDetailsStep({
                 onChange={handleInputChange}
                 placeholder="Any special requirements, installation notes, or other details..."
                 rows={3}
-                className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-rail-light-blue focus:border-transparent resize-none"
+                className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md outline-none resize-none"
               />
             </div>
           </div>

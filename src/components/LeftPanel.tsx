@@ -7,6 +7,13 @@ import styles from "./EditorShell.module.css"
 import NumericInput from "./NumericInput"
 import ConstraintInspector, { InspectorTarget } from "./ConstraintInspector"
 import { editorTemplates } from "@/lib/state"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 function Chip({ label }: { label: string }) {
   return (
@@ -247,17 +254,7 @@ export default function LeftPanel({
         overflowY: "auto",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          <Chip label={`Mode: ${state.mode}`} />
-          <Chip label={`View: ${state.view}`} />
-          <Chip label={`Snap: ${state.snapEnabled ? "on" : "off"}`} />
-          {state.mode === "balustrade" ? <Chip label={`Spacing: ${state.constraintMode}`} /> : null}
-          {canShowGizmoTool ? <Chip label={`Gizmo: ${state.gizmoTool}`} /> : null}
-        </div>
-      </div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
 
       {state.editorContext === "project" ? (
         <Section title="Project" description="Return to the linked project stage overview.">
@@ -270,7 +267,7 @@ export default function LeftPanel({
               }}
               onClick={() => onReturnToProject?.()}
             >
-              To Project
+              ← Back to Project
             </button>
 
             <div style={{ fontSize: 12, color: "#6B7280" }}>
@@ -300,7 +297,7 @@ export default function LeftPanel({
         </Section>
       ) : null}
 
-      <Section title="Workspace" description="Choose what you are editing, and how you’re viewing it.">
+      <Section title="Elevation settings" description="Set heights and constraints used across the layout.">
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {/* <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -348,20 +345,20 @@ export default function LeftPanel({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <Field
-                label="Laser level Y"
+                label="Laser height"
                 value={state.balcony.laserLevelY}
                 onChange={(laserLevelY) => dispatch({ type: "UPDATE_BALCONY_LASER_LEVEL", laserLevelY })}
                 step={1}
             />
             <Field
-                label="Top Y (group)"
+                label="Top height"
                 value={state.balcony.topY}
                 onChange={(topY) => dispatch({ type: "UPDATE_BALCONY_TOP_Y", topY })}
                 step={1}
             />
 
             <Field
-                label="FFL (from laser)"
+                label="Floor level (from laser)"
                 value={state.foundation.fflHeight}
                 onChange={(fflHeight) => dispatch({ type: "UPDATE_FOUNDATION_FFL_HEIGHT", fflHeight })}
                 step={1}
@@ -376,14 +373,13 @@ export default function LeftPanel({
             />
 
             <div style={{ fontSize: 12, color: "#6B7280", gridColumn: "1 / -1" }}>
-                Auto top is ON (v1). Top Y will not go below what’s required for min length.
+                Auto top is on — top height will not fall below what's required for the minimum post length.
             </div>
           </div>
         </div>
       </Section>
 
-      {state.hasDerivedBalustrade ? (
-        <Section title="Post generation" description="Controls used when generating posts from the current balustrade path.">
+      <Section title="Post generation" description="Set these before building — they are applied each time the balustrade is built.">
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <Field
             label="Max post spacing"
@@ -441,13 +437,10 @@ export default function LeftPanel({
             Regenerate posts
           </button> */}
 
-          <div style={{ fontSize: 12, color: "#6B7280" }}>
-            Derive uses the current floor edge offsets/refTypes to produce the offset path (and runs). Regeneration uses “max spacing” to ensure each span is ≤ the value.
-          </div>
         </div>
-        </Section>
-      ) : null}
+      </Section>
 
+      {/* Debug section — hidden from production UI
       <Section title="Debug" description="Temporary visualisation helpers during development.">
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <TogglePill
@@ -458,6 +451,7 @@ export default function LeftPanel({
           <div style={{ fontSize: 12, color: "#6B7280" }}>Shows 80×80 planes at non-180° corners (visual-only).</div>
         </div>
       </Section>
+      */}
 
       <Section
         title="Inspector"
@@ -567,13 +561,13 @@ export default function LeftPanel({
 
                 <Field
                     key={`${selectedPost.id}-yBottom`}
-                    label="Derived yBottom"
+                    label="Bottom Y (derived)"
                     value={selectedPost.position.yBottom}
                     disabled
                 />
                 <Field
                     key={`${selectedPost.id}-yTop`}
-                    label="Derived yTop"
+                    label="Top Y (derived)"
                     value={selectedPost.position.yTop}
                     disabled
                 />
@@ -651,43 +645,51 @@ export default function LeftPanel({
                         min={1}
                     />
 
-                    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Start boundary bay ref mode</div>
-                    <select
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Start boundary bay ref mode</div>
+                      <Select
                         key={`${selectedPost.id}-${selectedPost.segmentId}-boundaryStartBayRefMode`}
-                        className={styles.input}
                         value={selectedSegmentConstraints.boundaryStartBayRefMode}
-                        onChange={(e) =>
-                            dispatch({
+                        onValueChange={(v) =>
+                          dispatch({
                             type: "SET_SEGMENT_BOUNDARY_START_BAY_REF_MODE",
                             segmentId: selectedPost.segmentId,
-                            value: e.target.value as BoundaryBayRefMode,
-                            })
+                            value: v as BoundaryBayRefMode,
+                          })
                         }
-                    >
-                        <option value="segment">segment</option>
-                        <option value="linked">linked</option>
-                    </select>
-                    </label>
+                      >
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="segment">Segment</SelectItem>
+                          <SelectItem value="linked">Linked</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>End boundary bay ref mode</div>
-                    <select
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>End boundary bay ref mode</div>
+                      <Select
                         key={`${selectedPost.id}-${selectedPost.segmentId}-boundaryEndBayRefMode`}
-                        className={styles.input}
                         value={selectedSegmentConstraints.boundaryEndBayRefMode}
-                        onChange={(e) =>
-                            dispatch({
+                        onValueChange={(v) =>
+                          dispatch({
                             type: "SET_SEGMENT_BOUNDARY_END_BAY_REF_MODE",
                             segmentId: selectedPost.segmentId,
-                            value: e.target.value as BoundaryBayRefMode,
-                            })
+                            value: v as BoundaryBayRefMode,
+                          })
                         }
-                    >
-                        <option value="segment">segment</option>
-                        <option value="linked">linked</option>
-                    </select>
-                    </label>
+                      >
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="segment">Segment</SelectItem>
+                          <SelectItem value="linked">Linked</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
                   <div style={{ fontSize: 12, color: "#6B7280" }}>
                     y_ref = segment topY - panel / bay height. Boundary mode affects first/last bay on this segment only.

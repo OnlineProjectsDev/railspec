@@ -718,33 +718,31 @@ export function DropAnalyser({ balcony }: DropAnalyserProps) {
 
     return (
     <>
-        { posts_data_array.length >= 1 ?
-                    <ModelViewer
-                    
-                        ready={posts_data_array.length >= 1}
-                        powdercoat_color={powdercoat_color} 
-                        lighting={lighting}
-                        posts_data_array={posts_data_array}
-                        baseplates_data_array={baseplates_data_array}
-                        vertical_infill_data_array={vertical_infill_data_array}
-                        glass_infill_data_array={glass_infill_data_array}
-                        mid_rail_data_array={mid_rail_data_array}
-                        top_rail_data_array={top_rail_data_array}
-                        fixed_components_data_array={fixed_components_data_array}
-                        posts_vectors_array={posts_vectors_array}
-                        infill_vectors_array={infill_vectors_array}
-                        toprail_vectors_array={toprail_vectors_array}
-                        allowed_length={allowed_length}
-                        wall_data_array={wall_data_array}
-                        foundation_array={[...foundationDerived.map((post,i) => { return {x:post.x,y:-( checkedFloorRef && (floorRef !== "") ? floorRef : Math.min(...foundationDerived.map(post => {return post.height}),...postsDerived.map(post => {return post.height}))),z:post.z} })]}
-                        box_width={5.52*50}
-                        box_height={4.7*50}
-                        camera_on_load={camera_on_load}
-                        reset_camera={reset_camera}
-                        showLaser={checkedShowLaserLine}
-                        showDimensions={checkedShowDimensions}
-                        showCuttingPlanes={checkedShowCuttingPlanes}
-                    /> : <></>}
+        <ModelViewer
+            ready={posts_data_array.length >= 1}
+            powdercoat_color={powdercoat_color} 
+            lighting={lighting}
+            posts_data_array={posts_data_array}
+            baseplates_data_array={baseplates_data_array}
+            vertical_infill_data_array={vertical_infill_data_array}
+            glass_infill_data_array={glass_infill_data_array}
+            mid_rail_data_array={mid_rail_data_array}
+            top_rail_data_array={top_rail_data_array}
+            fixed_components_data_array={fixed_components_data_array}
+            posts_vectors_array={posts_vectors_array}
+            infill_vectors_array={infill_vectors_array}
+            toprail_vectors_array={toprail_vectors_array}
+            allowed_length={allowed_length}
+            wall_data_array={wall_data_array}
+            foundation_array={[...foundationDerived.map((post,i) => { return {x:post.x,y:-( checkedFloorRef && (floorRef !== "") ? floorRef : Math.min(...foundationDerived.map(post => {return post.height}),...postsDerived.map(post => {return post.height}))),z:post.z} })]}
+            box_width={5.52*50}
+            box_height={4.7*50}
+            camera_on_load={camera_on_load}
+            reset_camera={reset_camera}
+            showLaser={checkedShowLaserLine}
+            showDimensions={checkedShowDimensions}
+            showCuttingPlanes={checkedShowCuttingPlanes}
+        />
     </>
   );
 }

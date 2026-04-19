@@ -391,11 +391,14 @@ export default function EditorBalconyManager({
 
   if (!orderedBalconies.length) {
     return (
-      <p className="text-sm text-muted-foreground">
-        {includeDeleted
-          ? "No editor balconies found for this job/stage combination."
-          : "No active editor balconies found yet for this job/stage combination."}
-      </p>
+      <div className="px-4 py-10 flex flex-col items-center justify-center text-center gap-1.5">
+        <p className="text-sm font-medium text-gray-500">No balconies yet</p>
+        <p className="text-xs text-gray-400">
+          {includeDeleted
+            ? "No editor balconies found for this stage."
+            : "Use \u201cAdd Balcony\u201d in the top right to create the first balcony for this stage."}
+        </p>
+      </div>
     );
   }
 
@@ -405,133 +408,273 @@ export default function EditorBalconyManager({
         <div className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center">
           <div className="rounded-md border bg-white px-4 py-3 shadow-sm flex items-center gap-2">
             <LoaderCircle className="animate-spin" />
-            <span className="text-sm font-medium">Opening copied balcony…</span>
+            <span className="text-xs font-medium">Opening copied balcony…</span>
           </div>
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input
-          placeholder="Filter by drop"
-          className="w-full sm:w-40 rounded-md border px-3 py-2 text-sm"
-          value={dropFilter}
-          suppressHydrationWarning
-          onChange={(e) => setDropFilter(e.target.value)}
-        />
+      <div className="overflow-y-auto max-h-[480px]">
+      <div className="flex flex-col gap-2.5 px-4 py-3">
+        {/* Filters */}
+        <div className="flex gap-2">
+          <input
+            placeholder="Filter by drop"
+            className="w-32 rounded-md border px-3 h-8 text-xs"
+            value={dropFilter}
+            suppressHydrationWarning
+            onChange={(e) => setDropFilter(e.target.value)}
+          />
+          <input
+            placeholder="Filter by balcony"
+            className="w-40 rounded-md border px-3 h-8 text-xs"
+            value={balconyFilter}
+            suppressHydrationWarning
+            onChange={(e) => setBalconyFilter(e.target.value)}
+          />
+        </div>
 
-        <input
-          placeholder="Filter by balcony"
-          className="w-full sm:w-48 rounded-md border px-3 py-2 text-sm"
-          value={balconyFilter}
-          suppressHydrationWarning
-          onChange={(e) => setBalconyFilter(e.target.value)}
-        />
-      </div>
+        {!filteredBalconies.length ? (
+          <p className="text-xs text-gray-400">No balconies match your filters.</p>
+        ) : null}
 
-      {!filteredBalconies.length ? (
-        <p className="text-sm text-muted-foreground">
-          No balconies match your filters.
-        </p>
-      ) : null}
+        {filteredBalconies.map((balcony, index) => {
+          const isEditing = editingId === balcony.id;
+          const isCopying = copyingId === balcony.id;
 
-      {filteredBalconies.map((balcony, index) => {
-        const isEditing = editingId === balcony.id;
-        const isCopying = copyingId === balcony.id;
-
-        return (
-          <div
-            key={balcony.id}
-            className="rounded-md border p-3 flex flex-col gap-3"
-          >
-            <div className="min-w-0 flex-1">
-              {isEditing ? (
-                <div className="flex flex-col gap-2 max-w-md">
-                  <div className="flex gap-2">
+          return (
+            <div
+              key={balcony.id}
+              className={`rounded-md border flex flex-col gap-0 ${balcony.isDeleted ? "opacity-60 bg-gray-50" : "bg-white"}`}
+            >
+              {/* Main row */}
+              <div className="flex items-center gap-2 px-3 py-2 min-h-[42px]">
+                {/* Name / edit form */}
+                {isEditing ? (
+                  <div className="flex gap-2 flex-1 min-w-0 flex-wrap items-end">
                     <div className="flex flex-col gap-1">
                       <input
-                        className="w-24 rounded-md border px-3 py-2 text-sm"
+                        className="w-20 rounded-md border px-2.5 py-1.5 text-sm"
                         value={draft.drop}
                         suppressHydrationWarning
-						onChange={(e) => {
-						setDraft((current) => ({ ...current, drop: e.target.value }));
-						setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
-						}}
+                        onChange={(e) => {
+                          setDraft((current) => ({ ...current, drop: e.target.value }));
+                          setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
+                        }}
                       />
                       {localFieldErrors.drop ? (
-                        <div className="text-xs text-red-600">
-                          {localFieldErrors.drop}
-                        </div>
+                        <div className="text-xs text-red-600">{localFieldErrors.drop}</div>
                       ) : saveFieldErrors?.drop?.length ? (
-                        <div className="text-xs text-red-600">
-                          {saveFieldErrors.drop[0]}
-                        </div>
+                        <div className="text-xs text-red-600">{saveFieldErrors.drop[0]}</div>
                       ) : null}
                     </div>
-
                     <div className="flex flex-col gap-1">
                       <input
-                        className="w-32 rounded-md border px-3 py-2 text-sm"
+                        className="w-28 rounded-md border px-2.5 py-1.5 text-sm"
                         value={draft.balconyNo}
                         suppressHydrationWarning
-						onChange={(e) => {
-						setDraft((current) => ({ ...current, balconyNo: e.target.value }));
-						setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
-						}}
+                        onChange={(e) => {
+                          setDraft((current) => ({ ...current, balconyNo: e.target.value }));
+                          setLocalFieldErrors((current) => ({ ...current, drop: undefined, balconyNo: undefined }));
+                        }}
                       />
                       {localFieldErrors.balconyNo ? (
-                        <div className="text-xs text-red-600">
-                          {localFieldErrors.balconyNo}
-                        </div>
+                        <div className="text-xs text-red-600">{localFieldErrors.balconyNo}</div>
                       ) : liveBalconyNoError ? (
-                        <div className="text-xs text-red-600">
-                          {liveBalconyNoError}
-                        </div>
+                        <div className="text-xs text-red-600">{liveBalconyNoError}</div>
                       ) : saveFieldErrors?.balconyNo?.length ? (
-                        <div className="text-xs text-red-600">
-                          {saveFieldErrors.balconyNo[0]}
-                        </div>
+                        <div className="text-xs text-red-600">{saveFieldErrors.balconyNo[0]}</div>
                       ) : null}
                     </div>
                   </div>
-
-                  <div className="text-xs text-muted-foreground">
-                    Names must remain unique among non-deleted balconies on this stage.
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="font-semibold flex items-center gap-2">
-                    <span>
+                ) : (
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <span className="text-xs font-semibold text-gray-900 truncate">
                       Drop {balcony.drop} — Balcony {balcony.balconyNo}
                     </span>
+                    <span className="text-[10px] text-gray-400 shrink-0">v{balcony.version}</span>
                     {balcony.isDeleted ? (
-                      <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-muted text-muted-foreground border">
+                      <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border shrink-0">
                         Deleted
                       </span>
                     ) : null}
+                    {balcony.notes ? (
+                      <span className="text-[10px] text-gray-400 truncate hidden sm:block">{balcony.notes}</span>
+                    ) : null}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    v{balcony.version} • #{balcony.sortOrder}
-                  </div>
-                  {balcony.notes ? (
-                    <div className="text-sm mt-2">Notes: {balcony.notes}</div>
-                  ) : null}
-                  {balcony.geometryNotes ? (
-                    <div className="text-sm mt-1">
-                      Geometry Notes: {balcony.geometryNotes}
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </div>
+                )}
 
-            {isCopying ? (
-              <div className="flex flex-col gap-2 max-w-md">
-                <div className="flex gap-2">
+                {/* Action icons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    title="Move up"
+                    disabled={isSaving || isReordering || isDuplicating || balcony.isDeleted || index === 0}
+                    suppressHydrationWarning
+                    onClick={() => moveBalcony(balcony.id, -1)}
+                  >
+                    {isReordering ? <LoaderCircle className="animate-spin h-3.5 w-3.5" /> : <ArrowUp className="h-3.5 w-3.5" />}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    title="Move down"
+                    disabled={isSaving || isReordering || isDuplicating || balcony.isDeleted || index === orderedBalconies.length - 1}
+                    suppressHydrationWarning
+                    onClick={() => moveBalcony(balcony.id, 1)}
+                  >
+                    {isReordering ? <LoaderCircle className="animate-spin h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+                  </Button>
+
+                  <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+                  {isEditing ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="Save name"
+                        disabled={
+                          isSaving || isReordering ||
+                          !draft.drop.trim() || !draft.balconyNo.trim() ||
+                          !!localFieldErrors.drop || !!localFieldErrors.balconyNo || !!liveBalconyNoError
+                        }
+                        suppressHydrationWarning
+                        onClick={() => saveEdit(balcony)}
+                      >
+                        {isSaving ? <LoaderCircle className="animate-spin h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="Cancel edit"
+                        disabled={isSaving || isReordering || isDuplicating}
+                        suppressHydrationWarning
+                        onClick={cancelEdit}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      title="Edit name"
+                      disabled={isSaving || isReordering || isDuplicating}
+                      suppressHydrationWarning
+                      onClick={() => startEdit(balcony)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+
+                  {!balcony.isDeleted ? (
+                    <>
+                      {isCopying ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Confirm copy"
+                            disabled={
+                              isDuplicating || isSaving || isReordering ||
+                              !copyDraft.drop.trim() || !copyDraft.balconyNo.trim() ||
+                              !!copyLocalFieldErrors.drop || !!copyLocalFieldErrors.balconyNo || !!liveCopyBalconyNoError
+                            }
+                            suppressHydrationWarning
+                            onClick={() => confirmCopyBalcony(balcony)}
+                          >
+                            {isDuplicating ? <LoaderCircle className="animate-spin h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Cancel copy"
+                            disabled={isDuplicating}
+                            suppressHydrationWarning
+                            onClick={cancelCopyBalcony}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          title="Copy balcony"
+                          disabled={isSaving || isReordering || isDuplicating || editingId != null || copyingId != null}
+                          suppressHydrationWarning
+                          onClick={() => startCopyBalcony(balcony)}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                        title="Delete balcony"
+                        disabled={isSaving || isReordering || isDuplicating || isCopying}
+                        suppressHydrationWarning
+                        onClick={() => deleteBalcony(balcony)}
+                      >
+                        {isSaving && !isEditing ? <LoaderCircle className="animate-spin h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      title="Restore balcony"
+                      disabled={isSaving || isReordering || isDuplicating}
+                      suppressHydrationWarning
+                      onClick={() => restoreBalcony(balcony)}
+                    >
+                      {isSaving ? <LoaderCircle className="animate-spin h-3.5 w-3.5 mr-1" /> : null}
+                      Restore
+                    </Button>
+                  )}
+                </div>
+
+                {/* Open Editor */}
+                {!balcony.isDeleted && !isCopying ? (
+                  <Link
+                    href={`/editor/balcony/${balcony.id}`}
+                    className="shrink-0 inline-flex items-center justify-center px-3 h-7 text-[11px] font-medium rounded-md bg-gray-900 text-white hover:bg-gray-700 transition-colors"
+                  >
+                    Open Editor
+                  </Link>
+                ) : null}
+              </div>
+
+              {/* Copy form (inline expansion) */}
+              {isCopying ? (
+                <div className="flex flex-wrap items-end gap-2 border-t bg-gray-50 px-3 py-2.5">
+                  <div className="text-[10px] font-semibold text-gray-500 w-full">Copy to new name:</div>
                   <div className="flex flex-col gap-1">
                     <input
-                      className="w-24 rounded-md border px-3 py-2 text-sm"
+                      className="w-20 rounded-md border bg-white px-2.5 py-1.5 text-sm"
                       value={copyDraft.drop}
                       suppressHydrationWarning
                       onChange={(e) => {
@@ -540,15 +683,12 @@ export default function EditorBalconyManager({
                       }}
                     />
                     {copyLocalFieldErrors.drop ? (
-                      <div className="text-xs text-red-600">
-                        {copyLocalFieldErrors.drop}
-                      </div>
+                      <div className="text-xs text-red-600">{copyLocalFieldErrors.drop}</div>
                     ) : null}
                   </div>
-
                   <div className="flex flex-col gap-1">
                     <input
-                      className="w-32 rounded-md border px-3 py-2 text-sm"
+                      className="w-28 rounded-md border bg-white px-2.5 py-1.5 text-sm"
                       value={copyDraft.balconyNo}
                       suppressHydrationWarning
                       onChange={(e) => {
@@ -557,185 +697,18 @@ export default function EditorBalconyManager({
                       }}
                     />
                     {copyLocalFieldErrors.balconyNo ? (
-                      <div className="text-xs text-red-600">
-                        {copyLocalFieldErrors.balconyNo}
-                      </div>
+                      <div className="text-xs text-red-600">{copyLocalFieldErrors.balconyNo}</div>
                     ) : liveCopyBalconyNoError ? (
-                      <div className="text-xs text-red-600">
-                        {liveCopyBalconyNoError}
-                      </div>
+                      <div className="text-xs text-red-600">{liveCopyBalconyNoError}</div>
                     ) : null}
                   </div>
                 </div>
-
-                <div className="text-xs text-muted-foreground">
-                  Names must remain unique among non-deleted balconies on this stage.
-                </div>
-              </div>
-            ) : null}
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                title="Move up"
-                disabled={isSaving || isReordering || isDuplicating || balcony.isDeleted || index === 0}
-                suppressHydrationWarning
-                onClick={() => moveBalcony(balcony.id, -1)}
-              >
-                {isReordering ? <LoaderCircle className="animate-spin" /> : <ArrowUp />}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                title="Move down"
-                disabled={isSaving || isReordering || isDuplicating || balcony.isDeleted || index === orderedBalconies.length - 1}
-                suppressHydrationWarning
-                onClick={() => moveBalcony(balcony.id, 1)}
-              >
-                {isReordering ? <LoaderCircle className="animate-spin" /> : <ArrowDown />}
-              </Button>
-
-              {isEditing ? (
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    title="Save name"
-                    disabled={
-                      isSaving ||
-                      isReordering ||
-                      !draft.drop.trim() ||
-                      !draft.balconyNo.trim() ||
-                      !!localFieldErrors.drop ||
-                      !!localFieldErrors.balconyNo ||
-                      !!liveBalconyNoError
-                    }
-                    suppressHydrationWarning
-                    onClick={() => saveEdit(balcony)}
-                  >
-                    {isSaving ? <LoaderCircle className="animate-spin" /> : <Save />}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    title="Cancel edit"
-                    disabled={isSaving || isReordering || isDuplicating || isCopying}
-                    suppressHydrationWarning
-                    onClick={cancelEdit}
-                  >
-                    <X />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  title="Edit name"
-                  disabled={isSaving || isReordering || isDuplicating}
-                  suppressHydrationWarning
-                  onClick={() => startEdit(balcony)}
-                >
-                  <Pencil />
-                </Button>
-              )}
-
-              {!balcony.isDeleted ? (
-                <div className="flex items-center gap-2">
-                  {isCopying ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        title="Save copy name"
-                        disabled={
-                          isSaving ||
-                          isReordering ||
-                          isDuplicating ||
-                          !copyDraft.drop.trim() ||
-                          !copyDraft.balconyNo.trim() ||
-                          !!copyLocalFieldErrors.drop ||
-                          !!copyLocalFieldErrors.balconyNo ||
-                          !!liveCopyBalconyNoError
-                        }
-                        suppressHydrationWarning
-                        onClick={() => confirmCopyBalcony(balcony)}
-                      >
-                        {isDuplicating ? <LoaderCircle className="animate-spin" /> : <Save />}
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        title="Cancel copy"
-                        disabled={isSaving || isReordering || isDuplicating || isCopying}
-                        suppressHydrationWarning
-                        onClick={cancelCopyBalcony}
-                      >
-                        <X />
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      title="Copy existing balcony"
-                      disabled={isSaving || isReordering || isDuplicating || editingId != null || copyingId != null}
-                      suppressHydrationWarning
-                      onClick={() => startCopyBalcony(balcony)}
-                    >
-                      <Copy />
-                    </Button>
-                  )}
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    title="Delete balcony"
-                    disabled={isSaving || isReordering || isDuplicating || isCopying}
-                    suppressHydrationWarning
-                    onClick={() => deleteBalcony(balcony)}
-                  >
-                    {isSaving && !isEditing ? <LoaderCircle className="animate-spin" /> : <Trash2 />}
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  title="Restore balcony"
-                  disabled={isSaving || isReordering || isDuplicating}
-                  suppressHydrationWarning
-                  onClick={() => restoreBalcony(balcony)}
-                >
-                  {isSaving ? <LoaderCircle className="animate-spin" /> : "Restore"}
-                </Button>
-              )}
-
-              {!balcony.isDeleted && !isCopying ? (
-                <Link
-                  href={`/editor/balcony/${balcony.id}`}
-                  className="ml-auto inline-flex items-center justify-center px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:opacity-90"
-                >
-                  Open Editor
-                </Link>
               ) : null}
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      </div>
     </>
   );
 }

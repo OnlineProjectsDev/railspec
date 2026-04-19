@@ -5,8 +5,8 @@ import { motion } from "motion/react";
 import { useFormContext } from "react-hook-form";
 import type { insertJobSchemaType } from "@/zod-schemas/jobs";
 import { getDesignOptionsForWindLoad } from "@/lib/jobDesignRules";
-
 import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type FormValues = insertJobSchemaType;
 
@@ -24,7 +24,8 @@ export default function DesignStep() {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 w-full content-start pt-2">
+    <ScrollArea className="flex-1 min-h-0 pr-1">
+      <div className="grid grid-cols-2 gap-2 w-full content-start pt-2">
       {designOptions.map((design, index) => {
         const isSelected = currentDesign === design.id;
 
@@ -69,6 +70,7 @@ export default function DesignStep() {
           </motion.button>
         );
       })}
-    </div>
+      </div>
+    </ScrollArea>
   );
 }

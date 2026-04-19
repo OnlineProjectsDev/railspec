@@ -203,7 +203,8 @@ export function ModelViewer ({
   }
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div style={{ width: "100%", height: "100%", padding: "0.75em", background: "white", boxSizing: "border-box", borderRadius: "0.5rem" }}>
+      <div style={{ width: "100%", height: "100%", position: "relative", borderRadius: "0.5rem", overflow: "hidden" }}>
       <Canvas
         key={canvasKey}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
@@ -212,7 +213,18 @@ export function ModelViewer ({
           canvasElRef.current = gl.domElement;
         }}
       >
-        {/* <color attach="background" args={["#3a3a3a"]} /> */}
+        <color attach="background" args={["#eaebee"]} />
+        <gridHelper
+          args={[80, 40, "#b0b4bc", "#d0d3d8"]}
+          position={(() => {
+            if (posts_data_array.length === 0) return [15, 0, 2] as [number,number,number];
+            const xs = posts_data_array.map(p => p.x / 100);
+            const zs = posts_data_array.map(p => p.z / 100);
+            const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+            const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+            return [cx, 0, cz] as [number, number, number];
+          })()}
+        />
         <ambientLight intensity={lighting.ambient_intensity} color={lighting.ambient_color}/>
         <pointLight position={[lighting.x, lighting.y, lighting.z]} intensity={lighting.light_intensity} color={lighting.light_color}/>
         <LoadParts powdercoat_color={(powdercoat_color)} posts_data_array={posts_data_array} baseplates_data_array={baseplates_data_array} vertical_infill_data_array={vertical_infill_data_array} glass_infill_data_array={glass_infill_data_array} mid_rail_data_array={mid_rail_data_array} top_rail_data_array={top_rail_data_array} fixed_components_data_array={fixed_components_data_array} wall_data_array={wall_data_array} posts_vectors_array={posts_vectors_array} infill_vectors_array={infill_vectors_array} toprail_vectors_array={toprail_vectors_array} allowed_length={allowed_length} foundation_array={foundation_array} showLaser={showLaser} showDimensions={showDimensions} showCuttingPlanes={showCuttingPlanes}
@@ -221,6 +233,7 @@ export function ModelViewer ({
         {/* <OrbitControls /> */}
         <Rig enabled={enableControls} camera_reset={reset_camera} position={[camera_on_load.x/100,camera_on_load.y/100,camera_on_load.z/100] } focus={[camera_on_load.o_x/100,camera_on_load.o_y/100,camera_on_load.o_z/100] }></Rig>
       </Canvas>
+      </div>
     </div>
   )
 }

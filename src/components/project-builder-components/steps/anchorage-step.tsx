@@ -6,6 +6,7 @@ import { useFormContext } from "react-hook-form";
 import type { insertJobSchemaType } from "@/zod-schemas/jobs";
 import { getAnchorageOptionsForDesign } from "@/lib/jobDesignRules";
 import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type FormValues = insertJobSchemaType;
 
@@ -23,8 +24,9 @@ export default function AnchorageStep() {
   };
 
   return (
-    <div className="flex flex-col gap-2 w-full flex-1">
-      <div className="grid grid-cols-2 gap-2 w-full content-start flex-1">
+    <div className="flex flex-col gap-2 w-full flex-1 min-h-0">
+      <ScrollArea className="flex-1 min-h-0 pr-1">
+      <div className="grid grid-cols-2 gap-2 w-full content-start pb-2">
         {anchorageOptions.map((opt, index) => {
           const isSelected = currentAnchorage === opt.id;
 
@@ -62,7 +64,7 @@ export default function AnchorageStep() {
                   <span className="text-[10px] text-muted-foreground">{opt.label}</span>
                 </div>
                 <span
-                  className={`flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 text-[9px] ${
+                  className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full border-2 text-[10px] ${
                     isSelected && clashing
                       ? "bg-amber-400 border-amber-400 text-white"
                       : isSelected
@@ -77,6 +79,7 @@ export default function AnchorageStep() {
           );
         })}
       </div>
+      </ScrollArea>
 
       {clashing && (
         <div className="mt-auto rounded-md bg-amber-50 border border-amber-300 px-3 py-2.5 flex items-start gap-2">

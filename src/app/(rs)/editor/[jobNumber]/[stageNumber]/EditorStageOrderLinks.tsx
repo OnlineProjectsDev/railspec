@@ -1,9 +1,9 @@
 // /app/(rs)/editor/[jobNumber]/[stageNumber]/EditorStageOrderLinks.tsx
 "use client";
 
-import { Crop, FileText, LayoutTemplate, ListTree, Palette, PenTool, Ruler } from "lucide-react";
+import { Crop, ExternalLink, FileText, LayoutTemplate, ListTree, Palette, PenTool, Ruler } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, MouseEvent, useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 
 type RevisionOption = {
   value: string;
@@ -85,92 +85,81 @@ export default function EditorStageOrderLinks({
     setSelectedRevisionOption(e.target.value);
   };
 
-  const onActionClick = (e: MouseEvent, href: string, newTab?: boolean, disabled?: boolean) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (disabled) return;
-
-    if (newTab) {
-      window.open(href, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    router.push(href);
-  };
+  function getDisabledReason(action: ActionDef): string | null {
+    if (!hasEditorBalconies) return "No balconies added yet";
+    if (action.requiresValidRevision && selectedRevisionOption === "unsynced") return "Requires a saved revision";
+    if (action.key === "shopdrawings-print" && !hasShopDrawingSheets) return "No sheets in this revision";
+    if (
+      (action.key === "cuttingsheet" ||
+        action.key === "glass-order" ||
+        action.key === "powdercoat-order" ||
+        action.key === "components-list") &&
+      !hasFabricationParts
+    )
+      return "No fabrication parts";
+    return null;
+  }
 
   return (
-    <div className="rounded-md border p-4 bg-white">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h2 className="text-lg font-semibold">Order Links</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Open editor, shopdrawings, print/PDF, and fabrication outputs for this stage.
-          </p>
-        </div>
+    <div className="bg-white rounded-xl p-4 flex flex-col gap-4">
+      {/* Revision */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs font-semibold text-gray-700">Revision</span>
+        <select
+          value={selectedRevisionOption}
+          onChange={onRevisionChange}
+          className="w-full h-9 rounded-lg border bg-gray-50 px-3 text-xs text-gray-700 appearance-none"
+          suppressHydrationWarning
+        >
+          {revisionOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedRevisionOption}
-            onChange={onRevisionChange}
-            className="h-9 rounded-md border bg-white px-3 text-sm"
-            suppressHydrationWarning
-          >
-            {revisionOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+      {/* Stage outputs */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold text-gray-700">Stage Outputs</span>
+        {actions.map((action, i) => {
+          const disabledReason = getDisabledReason(action);
+          const disabled = disabledReason !== null;
+          const Icon = action.Icon;
+          const isPrimary = i === 0 && !disabled;
 
-          <div className="flex items-center gap-1.5">
-            {actions.map((action) => {
-              const disabled =
-                !hasEditorBalconies ||
-                (action.requiresValidRevision === true && selectedRevisionOption === "unsynced") ||
-                (action.key === "shopdrawings-print" && !hasShopDrawingSheets) ||
-                ((action.key === "cuttingsheet" ||
-                  action.key === "glass-order" ||
-                  action.key === "powdercoat-order" ||
-                  action.key === "components-list") &&
-                  !hasFabricationParts);
-
-              const Icon = action.Icon;
-
-              return (
-                <button
-                  key={action.key}
-                  type="button"
-                  title={
-                    disabled
-                      ? action.requiresValidRevision === true && selectedRevisionOption === "unsynced"
-                        ? `${action.title} (requires saved revision)`
-                        : action.key === "shopdrawings-print" && !hasShopDrawingSheets
-                          ? `${action.title} (no sheets)`
-                          : (action.key === "cuttingsheet" ||
-                              action.key === "glass-order" ||
-                              action.key === "powdercoat-order" ||
-                              action.key === "components-list") &&
-                            !hasFabricationParts
-                            ? `${action.title} (no fabrication parts)`
-                            : `${action.title} (disabled)`
-                      : action.title
-                  }
-                  onClick={(e) => onActionClick(e, action.href, action.newTab, disabled)}
-                  className={`h-9 w-9 rounded-md transition-colors flex items-center justify-center ${
-                    disabled
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-[#333]/30 hover:bg-[#333]/50 text-white cursor-pointer"
-                  }`}
-                  aria-disabled={disabled}
-                  suppressHydrationWarning
-                >
-                  <Icon size={16} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          return (
+            <button
+              key={action.key}
+              type="button"
+              title={disabledReason ?? action.title}
+              disabled={disabled}
+              suppressHydrationWarning
+              onClick={() => {
+                if (disabled) return;
+                if (action.newTab) {
+                  window.open(action.href, "_blank", "noopener,noreferrer");
+                } else {
+                  router.push(action.href);
+                }
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[11px] text-left transition-colors ${
+                disabled
+                  ? "bg-gray-50 text-gray-300 cursor-not-allowed"
+                  : isPrimary
+                  ? "bg-rail-light-blue text-white hover:opacity-90 cursor-pointer"
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 cursor-pointer"
+              }`}
+              aria-disabled={disabled}
+            >
+              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="flex-1">{action.title}</span>
+              {!disabled && action.newTab ? (
+                <ExternalLink className={`w-3 h-3 flex-shrink-0 ${isPrimary ? "text-white/60" : "text-gray-400"}`} />
+              ) : null}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

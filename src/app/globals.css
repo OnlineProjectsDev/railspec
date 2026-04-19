@@ -374,11 +374,17 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    outline: none;
   }
   body {
     @apply bg-background text-foreground;
   }
+}
+
+[data-slot="scroll-area-viewport"] {
+  overflow-anchor: none;
+  scroll-behavior: auto;
 }
 
 @layer utilities {

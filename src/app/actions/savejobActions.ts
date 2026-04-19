@@ -1,7 +1,7 @@
 // /app/actions/saveJobActions.ts
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { flattenValidationErrors } from "next-safe-action";
 import { redirect } from "next/navigation";
 
@@ -68,38 +68,50 @@ export const saveJobAction = actionClient
 
     // New Job
     if (job.id === "(New)") {
-      const result = await db
-        .insert(jobs)
-        .values({
-          customerId: job.customerId,
-          job_number: job.job_number,
-          stage: job.stage,
-          project_status: job.project_status,
-          address1: job.address1,
-          ...(job.address2?.trim() ? { address2: job.address2 } : {}),
-          city: job.city,
-          zip: job.zip,
-          measurer: job.measurer,
-          height_default: job.height_default,
-          design_default: job.design_default,
-          anchorage_default: job.anchorage_default,
-          toprail_default: job.toprail_default,
-          infill_default: job.infill_default,
-          wind_load: job.wind_load,
-          powdercoatColourId: job.powdercoatColourId ?? null,
-          ...(job.notes?.trim() ? { notes: job.notes } : {}),
-        })
-        .returning({ insertedId: jobs.id });
+      const result = await db.transaction(async (tx) => {
+        // Atomically grab the next job number inside a transaction
+        const [row] = await tx
+          .select({ maxJobNumber: sql<number>`COALESCE(MAX(${jobs.job_number}), 0)` })
+          .from(jobs)
+          .for("update");
+        const nextJobNumber = (row?.maxJobNumber ?? 0) + 1;
 
-      const newJobId = result[0].insertedId;
+        const inserted = await tx
+          .insert(jobs)
+          .values({
+            customerId: job.customerId,
+            job_number: nextJobNumber,
+            stage: job.stage,
+            project_status: job.project_status,
+            address1: job.address1,
+            ...(job.address2?.trim() ? { address2: job.address2 } : {}),
+            city: job.city,
+            zip: job.zip,
+            measurer: job.measurer,
+            height_default: job.height_default,
+            design_default: job.design_default,
+            anchorage_default: job.anchorage_default,
+            toprail_default: job.toprail_default,
+            infill_default: job.infill_default,
+            wind_load: job.wind_load,
+            powdercoatColourId: job.powdercoatColourId ?? null,
+            ...(job.notes?.trim() ? { notes: job.notes } : {}),
+          })
+          .returning({ insertedId: jobs.id, job_number: jobs.job_number });
 
-      // 👇 NEW: create first stage row for this job
-      await db.insert(jobStages).values({
-        jobId: newJobId,
-        stage: job.stage ?? 1,
-        defaults: buildStageDefaultsFromJob(job),
-        status: "draft",
+        const newJobId = inserted[0].insertedId;
+
+        await tx.insert(jobStages).values({
+          jobId: newJobId,
+          stage: job.stage ?? 1,
+          defaults: buildStageDefaultsFromJob({ ...job, job_number: nextJobNumber }),
+          status: "draft",
+        });
+
+        return inserted[0];
       });
+
+      const newJobId = result.insertedId;
 
       return {
         message: `Job ID #${newJobId} created successfully`,

@@ -52,14 +52,17 @@ function ToolPill({
   label,
   active,
   onClick,
+  title,
 }: {
   label: string
   active?: boolean
   onClick: () => void
+  title?: string
 }) {
   return (
     <button
       className={styles.btn}
+      title={title}
       style={{
         background: active ? "#111827" : "#FFFFFF",
         color: active ? "#FFFFFF" : "#111827",
@@ -161,7 +164,7 @@ export default function EditorToolbar({
           />
 
           <ToolPill
-            label={state.snapEnabled ? "Snap on" : "Snap off"}
+            label={state.snapEnabled ? "Snap ON" : "Snap OFF"}
             active={state.snapEnabled}
             onClick={() => dispatch({ type: "TOGGLE_SNAP" })}
           />
@@ -169,6 +172,7 @@ export default function EditorToolbar({
           {state.mode === "balustrade" ? (
             <ToolPill
               label="Laser heights"
+              title="Toggle laser height editing — click anchorage points on the canvas to adjust their height"
               active={state.laserHeightListEditMode}
               onClick={() =>
                 dispatch({
@@ -188,7 +192,7 @@ export default function EditorToolbar({
               <div className={styles.toolbarGroupLabel}>Substrate actions</div>
 
               <ToolPill
-                label={state.hasDerivedBalustrade ? "Rebuild" : "Build"}
+                label={state.hasDerivedBalustrade ? "Rebuild Balustrade" : "Build Balustrade"}
                 onClick={() => {
                   if (!state.hasDerivedBalustrade) {
                     dispatch({ type: "DERIVE_BALUSTRADE_FROM_FLOOR" })
@@ -220,7 +224,7 @@ export default function EditorToolbar({
               <div className={styles.toolbarGroupLabel}>Post tools</div>
 
               <ToolPill
-                label="Add"
+                label="Add post"
                 active={state.postsTool === "add_mid_post"}
                 onClick={() =>
                   dispatch({
@@ -242,7 +246,7 @@ export default function EditorToolbar({
               />
 
               <ToolPill
-                label="Delete"
+                label="Delete post"
                 active={state.postsTool === "delete_post"}
                 onClick={() =>
                   dispatch({

@@ -6,7 +6,7 @@ import { saveJobAction } from "@/app/actions/savejobActions";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/project-builder-components/header";
 import { HeaderSkeleton, SidebarSkeleton, PreviewSkeleton } from "@/components/project-builder-components/loading-skeleton";
@@ -198,6 +198,7 @@ export default function JobWizard({
         const [stayHereHref, setStayHereHref] = useState<string | null>(null);
         const [navDialogOpen, setNavDialogOpen] = useState(false);
         const [navHref, setNavHref] = useState<string | null>(null);
+        const [availableColours, setAvailableColours] = useState<PowdercoatColour[]>(colours);
     
         useEffect(() => {
             document.title = "Project Setup | RailSpec"
@@ -207,11 +208,11 @@ export default function JobWizard({
             id: '(New)',
             job_number: initialJobNumber,
             stage: 1,
-            customerId: 1,           // >= 1 (or set a real customer id)
-            address1: "123 Test Lane",
+            customerId: currentCustomer?.id ?? 1,
+            address1: "",
             address2: "",
-            city: "Sydney",
-            zip: "0000",             // 4 digits placeholder so it passes regex
+            city: "",
+            zip: "",
             project_status: 0,
             measurer: "",
             height_default: 1020,
@@ -293,11 +294,11 @@ export default function JobWizard({
         id: '(New)',
         job_number: initialJobNumber,
         stage: 1,
-        customerId: 1,           // >= 1 (or set a real customer id)
-        address1: "123 Test Lane",
+        customerId: currentCustomer?.id ?? 1,
+        address1: "",
         address2: "",
-        city: "Sydney",
-        zip: "0000",             // 4 digits placeholder so it passes regex
+        city: "",
+        zip: "",
         project_status: 0,
         measurer: "",
         height_default: 1020,
@@ -382,6 +383,22 @@ export default function JobWizard({
     const watchedJobNumber = values.job_number;
     const watchedStage = values.stage;
     const watchedId = values.id;
+
+    // Re-fetch colours whenever the relevant design selections change
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (values.design_default)    params.set("design",    values.design_default);
+        if (values.infill_default)    params.set("infill",    values.infill_default);
+        if (values.toprail_default)   params.set("toprail",   values.toprail_default);
+        if (values.anchorage_default) params.set("anchorage", values.anchorage_default);
+
+        const controller = new AbortController();
+        fetch(`/colours?${params.toString()}`, { signal: controller.signal })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => { if (data) setAvailableColours(data); })
+            .catch(() => {});
+        return () => controller.abort();
+    }, [values.design_default, values.infill_default, values.toprail_default, values.anchorage_default]);
 
     useEffect(() => {
         // Only check for NEW jobs
@@ -609,11 +626,11 @@ export default function JobWizard({
         id: '(New)',
         job_number: initialJobNumber,
         stage: 1,
-        customerId: 1,           // >= 1 (or set a real customer id)
-        address1: "123 Test Lane",
+        customerId: currentCustomer?.id ?? 1,
+        address1: "",
         address2: "",
-        city: "Sydney",
-        zip: "0000",             // 4 digits placeholder so it passes regex
+        city: "",
+        zip: "",
         project_status: 0,
         measurer: "",
         height_default: 1020,
@@ -640,6 +657,22 @@ export default function JobWizard({
     // Find the object from props.colours
     const selectedColour = colours.find(c => c.id === colourId) ?? null;
     // console.log(selectedColour)
+
+    const previewMaxSpacing = values.max_post_spacing ?? 1000;
+    const previewHeight = values.height_default ?? 1020;
+
+    const previewFoundationArray = useMemo(() => [
+      {id:1, type:'F', length: 2*previewMaxSpacing + 180, angle:180, offset:90, sections:1, height:0, x:0, z:-90, y:previewHeight},
+      {id:2, type:'F', length: previewMaxSpacing + 180, angle:90, offset:90, sections:0, height:0, x:2*previewMaxSpacing + 180, z:-90, y:previewHeight},
+      {id:3, type:'F', length:0, angle:180, offset:90, sections:0, height:0, x:2*previewMaxSpacing + 180, z:2*previewMaxSpacing + 90, y:previewHeight},
+    ], [previewMaxSpacing, previewHeight]);
+
+    const previewPostsArray = useMemo(() => [
+      {id:1, post_id:1, type:'BP', length:previewMaxSpacing, angle:180, reversed:false, height:0, x:0, z:0, y_ref1:previewHeight, y_ref2:989, y_ref3:80},
+      {id:2, post_id:2, type:'BP', length:previewMaxSpacing, angle:180, reversed:false, height:0, x:previewMaxSpacing, z:0, y_ref1:previewHeight, y_ref2:989, y_ref3:80},
+      {id:3, post_id:3, type:'BP', length:previewMaxSpacing, angle:90, reversed:false, height:0, x:2*previewMaxSpacing, z:0, y_ref1:previewHeight, y_ref2:989, y_ref3:80},
+      {id:4, post_id:4, type:'BP', length:0, angle:180, reversed:false, height:0, x:2*previewMaxSpacing, z:previewMaxSpacing, y_ref1:previewHeight, y_ref2:989, y_ref3:80},
+    ], [previewMaxSpacing, previewHeight]);
 
   return (
               <div className={`flex-1 min-h-0 flex flex-col gap-4 min-w-0 ${builderState !== 'welcome' ? '' : ''}` }>
@@ -711,7 +744,7 @@ export default function JobWizard({
                             onSubmit={form.handleSubmit(submitForm)}
                             className="flex-1 flex flex-col min-h-0"
                         >
-                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col">
                             <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentStep}
@@ -719,11 +752,11 @@ export default function JobWizard({
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.25 }}
-                                className="min-h-full px-4 pt-3 pb-4 flex flex-col"
+                                className="flex-1 min-h-0 px-4 pt-3 pb-4 flex flex-col"
                             >
                                 {currentStep === 1 && (
                                 <MainProjectDetailsStep
-                                    isEditable={true}
+                                    isEditable={isRailsafeEmployee}
                                     isRailsafeEmployee={isRailsafeEmployee}
                                     customers={customers}
                                     currentCustomer={currentCustomer}
@@ -742,10 +775,10 @@ export default function JobWizard({
                                 {currentStep === 6 && <DesignConstraintsStep />}
 
                                 {currentStep === 7 && (
-                                <ColourStepFormWrapper colours={colours} />
+                                <ColourStepFormWrapper colours={availableColours} />
                                 )}
 
-                                {currentStep === 8 && <OverviewStep customers={customers} colours={colours} />}
+                                {currentStep === 8 && <OverviewStep customers={customers} colours={availableColours} />}
 
 
                             </motion.div>
@@ -753,7 +786,7 @@ export default function JobWizard({
                             </div>
 
                             {currentStep === 8 && (
-                                <div className="mt-4 w-full">
+                                <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
                                     <Button
                                     type="submit"
                                     disabled={isSaving}
@@ -787,26 +820,17 @@ export default function JobWizard({
                         jobStageId: 0,
                         drop: "",
                         balconyNo: "",
-                        foundationArray: [
-                          {id:1, type:'F', length: 2*(form.getValues().max_post_spacing ?? 1000) + 180, angle:180, offset:90, sections:1, height:0, x:0, z:-90, y:form.getValues().height_default},
-                          {id:2, type:'F', length:(form.getValues().max_post_spacing ?? 1000) + 180, angle:90, offset:90, sections:0, height:0, x:2*(form.getValues().max_post_spacing ?? 1000) + 180, z:-90, y:form.getValues().height_default},
-                          {id:3, type:'F', length:0, angle:180, offset:90, sections:0, height:0, x:2*(form.getValues().max_post_spacing ?? 1000) + 180, z:2*(form.getValues().max_post_spacing ?? 1000) + 90, y:form.getValues().height_default}
-                        ],
-                        postsArray: [
-                          {id:1,  post_id:1, type: 'BP', length:form.getValues().max_post_spacing ?? 1000, angle:180, reversed:false, height:0, x:0, z:0, y_ref1:form.getValues().height_default, y_ref2:989, y_ref3:80},
-                          {id:2,  post_id:2, type: 'BP', length:form.getValues().max_post_spacing ?? 1000, angle:180, reversed:false, height:0, x:form.getValues().max_post_spacing ?? 1000, z:0, y_ref1:form.getValues().height_default, y_ref2:989, y_ref3:80},
-                          {id:3,  post_id:3, type: 'BP', length:form.getValues().max_post_spacing ?? 1000, angle:90, reversed:false, height:0, x:2*(form.getValues().max_post_spacing ?? 1000), z:0, y_ref1:form.getValues().height_default, y_ref2:989, y_ref3:80},
-                          {id:4, post_id:4, type: 'BP', length:0, angle:180, reversed:false, height:0, x:2*(form.getValues().max_post_spacing ?? 1000), z:form.getValues().max_post_spacing ?? 1000, y_ref1:form.getValues().height_default, y_ref2:989, y_ref3:80}
-                        ],
-                        heightMm: form.getValues().height_default,
-                        panelMm: form.getValues().height_default - (form.getValues().design_default === "RD-D5" ? 20 : 80),
-                        max_spacing: form.getValues().max_post_spacing ?? 1280,
-                        fflMm: form.getValues().anchorage_default === "SF" ? 200 : 0,
+                        foundationArray: previewFoundationArray,
+                        postsArray: previewPostsArray,
+                        heightMm: values.height_default,
+                        panelMm: (values.height_default ?? 1020) - (values.design_default === "RD-D5" ? 20 : 80),
+                        max_spacing: values.max_post_spacing ?? 1280,
+                        fflMm: values.anchorage_default === "SF" ? 200 : 0,
                         ffl_use: true,
-                        design: form.getValues().design_default,
-                        anchorage:  form.getValues().anchorage_default === "SF" ? "SFI" : form.getValues().anchorage_default,
-                        toprail: form.getValues().toprail_default,
-                        infill: form.getValues().infill_default,
+                        design: values.design_default,
+                        anchorage: values.anchorage_default === "SF" ? "SFI" : values.anchorage_default,
+                        toprail: values.toprail_default,
+                        infill: values.infill_default,
                         powdercoatcolour: {
                           id: selectedColour?.id ?? null,
                           hex: selectedColour?.hex ?? "#cccccc",
