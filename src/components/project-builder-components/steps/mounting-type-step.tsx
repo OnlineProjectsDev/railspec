@@ -43,7 +43,7 @@ export default function MountingTypeStep({ selectedMountingType, onSelect }: Mou
   }
 
   return (
-    <ScrollArea className="flex-1 min-h-0 pr-1">
+    <ScrollArea className="flex-1 min-h-0 pr-2">
       <div className="flex flex-col gap-2 pb-2">
         {mountingTypes.map((mountingType, index) => {
           const isSelected = selectedMountingType === mountingType.id;

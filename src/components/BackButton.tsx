@@ -3,6 +3,7 @@
 
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { ChevronLeft } from "lucide-react"
 import { ButtonHTMLAttributes } from "react"
 
 type Props = {
@@ -21,6 +22,6 @@ export function BackButton(
             className={className}
             onClick={() => router.back()}
             title={title}
-            >{title}</Button>
+            ><ChevronLeft className="h-3.5 w-3.5" />{title}</Button>
     )
 }

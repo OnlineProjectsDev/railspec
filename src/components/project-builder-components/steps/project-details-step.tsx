@@ -45,7 +45,7 @@ export default function ProjectDetailsStep({
   };
 
   return (
-    <ScrollArea className="flex-1 min-h-0">
+    <ScrollArea className="flex-1 min-h-0 pr-2">
         <div className="space-y-4">
           {/* Project Information */}
           <div>

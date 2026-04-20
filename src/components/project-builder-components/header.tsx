@@ -1,8 +1,9 @@
 "use client";
 
-import { RotateCcw, Home, ArrowRight } from "lucide-react";
+import { RotateCcw, Home, ArrowRight, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -16,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { insertJobSchemaType } from "@/zod-schemas/jobs";
+import { useBuilderNavStore } from "@/lib/builderNavStore";
 
 interface Step {
   id: number;
@@ -47,6 +49,7 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showHomeDialog, setShowHomeDialog] = useState(false);
   const router = useRouter();
+  const { backToJobHref, jobNumber } = useBuilderNavStore();
 
   const handleResetConfirm = () => {
     setIsSpinning(true);
@@ -93,9 +96,20 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
   };
 
   return (
-    <div className="px-6 py-2.5 flex w-full justify-between items-center mx-auto bg-white rounded-[10px]">
+    <div className="p-2.5 flex w-full justify-between items-center mx-auto bg-white rounded-[10px]">
       <div className="flex gap-8 items-center w-full justify-between">
         <div className="flex gap-4 items-center">
+          {/* Job context: number + back to editor — shown first when editing a job */}
+          {jobNumber && backToJobHref && (
+            <Link
+              href={backToJobHref}
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-rail-light-blue/10 hover:bg-rail-light-blue hover:text-white text-rail-light-blue transition-colors text-[11px] font-medium cursor-pointer"
+            >
+              <ArrowLeft size={10} />
+              Back to Editor
+            </Link>
+          )}
+          {!jobNumber && (
           <AlertDialog open={showHomeDialog} onOpenChange={setShowHomeDialog}>
             <Tooltip>
               <AlertDialogTrigger asChild>
@@ -131,6 +145,7 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          )}
           <ul className="flex text-xs font-sans">
             {steps.map((step, index) => (
               <li 
@@ -158,38 +173,7 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
           </ul>
         </div>
         <div className="flex gap-2 items-center">
-          <div className="bg-[#f5f5f5] rounded-[5px] p-1 relative overflow-hidden">
-            <div className="flex relative">
-              {/* Sliding background indicator */}
-              {/* <span 
-                className={`absolute inset-0 w-1/2 bg-rail-light-blue rounded-[4px] transition-transform duration-300 ease-in-out ${
-                  viewMode === '3d' ? 'translate-x-full' : 'translate-x-0'
-                }`}
-              />
-              <button
-                suppressHydrationWarning
-                onClick={() => onViewModeChange('2d')}
-                className={`px-3 py-1 text-[10px] leading-4 rounded-[4px] transition-colors duration-300 relative z-10 ${
-                  viewMode === '2d'
-                    ? 'text-white font-semibold'
-                    : 'text-gray-700 hover:text-rail-light-blue'
-                }`}
-              >
-                2D
-              </button>
-              <button
-                suppressHydrationWarning
-                onClick={() => onViewModeChange('3d')}
-                className={`px-3 py-1 text-[10px] leading-4 rounded-[4px] transition-colors duration-300 relative z-10 ${
-                  viewMode === '3d'
-                    ? 'text-white font-semibold'
-                    : 'text-gray-700 hover:text-rail-light-blue'
-                }`}
-              >
-                3D
-              </button> */}
-            </div>
-          </div>
+          {!jobNumber && (
           <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
             <Tooltip>
               <AlertDialogTrigger asChild>
@@ -225,6 +209,7 @@ export default function Header({ steps, currentStep, onStepClick, onReset, selec
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          )}
         </div>
       </div>
     </div>

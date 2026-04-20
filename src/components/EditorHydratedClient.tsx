@@ -97,6 +97,7 @@ export default function EditorHydratedClient({
       onReturnToProject={handleReturnToProject}
       isDirty={isDirty}
       toolbarTitle={toolbarTitle}
+      stageSettingsHref={`/jobs/stage?jobId=${jobId}&stage=${stageNumber}`}
     />
   )
 }

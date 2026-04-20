@@ -21,6 +21,7 @@ export default function EditorShell({
   onReturnToProject,
   isDirty = false,
   toolbarTitle,
+  stageSettingsHref,
 }: {
   state: RootState
   dispatch: React.Dispatch<Action>
@@ -30,6 +31,7 @@ export default function EditorShell({
   onReturnToProject?: () => void
   isDirty?: boolean
   toolbarTitle?: string
+  stageSettingsHref?: string
 }) {
   const [hoveredTarget, setHoveredTarget] = useState<InspectorTarget>(null)
   const [selectedTarget, setSelectedTarget] = useState<InspectorTarget>(null)
@@ -99,6 +101,7 @@ export default function EditorShell({
           selectedTarget={selectedTarget}
           onReturnToProject={handleReturnToProjectRequest}
           isDirty={isDirty}
+          stageSettingsHref={stageSettingsHref}
         />
       ) : null}
 

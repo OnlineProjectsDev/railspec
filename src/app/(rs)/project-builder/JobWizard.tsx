@@ -38,7 +38,8 @@ import OverviewStep from "@/components/project-builder-components/steps/overview
 import ContinueToJobDialog from "@/components/ContinueToJobDialog";
 import ConfirmJobNavigationDialog from "@/components/ConfirmJobNavigationDialog";
 import { DropAnalyser } from "./previewAnalyser"
-import { getMaxPostCentresSpacingMm } from "@/lib/jobDesignRules";
+import { getMaxPostCentresSpacingMm } from "@/lib/jobDesignRules"
+import { useBuilderNavStore } from "@/lib/builderNavStore";
 
 
 
@@ -384,6 +385,16 @@ export default function JobWizard({
     const watchedStage = values.stage;
     const watchedId = values.id;
 
+    // Sync back-to-job link into the nav store for the top Header
+    const { setBackToJob, clearBackToJob } = useBuilderNavStore();
+    useEffect(() => {
+        if (job?.job_number && job?.stage) {
+            setBackToJob(`/editor/${job.job_number}/${job.stage}`, job.job_number);
+        }
+        return () => { clearBackToJob(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [job?.job_number, job?.stage]);
+
     // Re-fetch colours whenever the relevant design selections change
     useEffect(() => {
         const params = new URLSearchParams();
@@ -713,19 +724,6 @@ export default function JobWizard({
                         onPrevStep={handlePrevStep}
                         />
 
-                        {form.getValues("id") !== "(New)" ? (
-                          <div className="p-2 border-b">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full"
-                              onClick={handleGoToJob}
-                            >
-                              Back to Job
-                            </Button>
-                          </div>
-                        ) : null}
-
                         <DisplayServerActionResponse result={saveResult} />
                         <ContinueToJobDialog
                           open={continueDialogOpen}
@@ -744,7 +742,7 @@ export default function JobWizard({
                             onSubmit={form.handleSubmit(submitForm)}
                             className="flex-1 flex flex-col min-h-0"
                         >
-                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col">
+                            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                             <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentStep}

@@ -9,6 +9,7 @@ import { ArrowDown, ArrowUp, Copy, LoaderCircle, Pencil, Save, Trash2, X } from 
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveEditorBalconyAction } from "@/app/actions/saveEditorBalconyAction";
 import { reorderEditorBalconiesForStageAction } from "@/app/actions/reorderEditorBalconiesForStageAction";
 import { duplicateEditorBalconyWithStateAction } from "@/app/actions/duplicateEditorBalconyWithStateAction";
@@ -403,7 +404,7 @@ export default function EditorBalconyManager({
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full overflow-hidden">
       {isDuplicating ? (
         <div className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm flex items-center justify-center">
           <div className="rounded-md border bg-white px-4 py-3 shadow-sm flex items-center gap-2">
@@ -413,20 +414,20 @@ export default function EditorBalconyManager({
         </div>
       ) : null}
 
-      <div className="overflow-y-auto max-h-[480px]">
-      <div className="flex flex-col gap-2.5 px-4 py-3">
+      <ScrollArea className="h-full">
+      <div className="flex flex-col gap-2 px-4 py-3 pr-3">
         {/* Filters */}
         <div className="flex gap-2">
           <input
             placeholder="Filter by drop"
-            className="w-32 rounded-md border px-3 h-8 text-xs"
+            className="w-32 rounded-md border bg-white px-2.5 h-7 text-[11px] outline-none focus:ring-1 focus:ring-ring"
             value={dropFilter}
             suppressHydrationWarning
             onChange={(e) => setDropFilter(e.target.value)}
           />
           <input
             placeholder="Filter by balcony"
-            className="w-40 rounded-md border px-3 h-8 text-xs"
+            className="w-40 rounded-md border bg-white px-2.5 h-7 text-[11px] outline-none focus:ring-1 focus:ring-ring"
             value={balconyFilter}
             suppressHydrationWarning
             onChange={(e) => setBalconyFilter(e.target.value)}
@@ -444,16 +445,17 @@ export default function EditorBalconyManager({
           return (
             <div
               key={balcony.id}
-              className={`rounded-md border flex flex-col gap-0 ${balcony.isDeleted ? "opacity-60 bg-gray-50" : "bg-white"}`}
+              className={`rounded-xl border flex flex-col gap-0 ${balcony.isDeleted ? "opacity-60 bg-gray-50" : "bg-white"}`}
             >
               {/* Main row */}
-              <div className="flex items-center gap-2 px-3 py-2 min-h-[42px]">
+              <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px]">
                 {/* Name / edit form */}
                 {isEditing ? (
                   <div className="flex gap-2 flex-1 min-w-0 flex-wrap items-end">
                     <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Drop</label>
                       <input
-                        className="w-20 rounded-md border px-2.5 py-1.5 text-sm"
+                        className="w-20 rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
                         value={draft.drop}
                         suppressHydrationWarning
                         onChange={(e) => {
@@ -462,14 +464,15 @@ export default function EditorBalconyManager({
                         }}
                       />
                       {localFieldErrors.drop ? (
-                        <div className="text-xs text-red-600">{localFieldErrors.drop}</div>
+                        <div className="text-[10px] text-red-600">{localFieldErrors.drop}</div>
                       ) : saveFieldErrors?.drop?.length ? (
-                        <div className="text-xs text-red-600">{saveFieldErrors.drop[0]}</div>
+                        <div className="text-[10px] text-red-600">{saveFieldErrors.drop[0]}</div>
                       ) : null}
                     </div>
                     <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Balcony</label>
                       <input
-                        className="w-28 rounded-md border px-2.5 py-1.5 text-sm"
+                        className="w-28 rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
                         value={draft.balconyNo}
                         suppressHydrationWarning
                         onChange={(e) => {
@@ -478,22 +481,25 @@ export default function EditorBalconyManager({
                         }}
                       />
                       {localFieldErrors.balconyNo ? (
-                        <div className="text-xs text-red-600">{localFieldErrors.balconyNo}</div>
+                        <div className="text-[10px] text-red-600">{localFieldErrors.balconyNo}</div>
                       ) : liveBalconyNoError ? (
-                        <div className="text-xs text-red-600">{liveBalconyNoError}</div>
+                        <div className="text-[10px] text-red-600">{liveBalconyNoError}</div>
                       ) : saveFieldErrors?.balconyNo?.length ? (
-                        <div className="text-xs text-red-600">{saveFieldErrors.balconyNo[0]}</div>
+                        <div className="text-[10px] text-red-600">{saveFieldErrors.balconyNo[0]}</div>
                       ) : null}
                     </div>
                   </div>
                 ) : (
                   <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-900 truncate">
-                      Drop {balcony.drop} — Balcony {balcony.balconyNo}
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 text-[10px] font-semibold tracking-wide shrink-0">
+                      {balcony.drop}
+                    </span>
+                    <span className="text-[11px] font-semibold text-gray-900 truncate">
+                      Balcony {balcony.balconyNo}
                     </span>
                     <span className="text-[10px] text-gray-400 shrink-0">v{balcony.version}</span>
                     {balcony.isDeleted ? (
-                      <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border shrink-0">
+                      <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-500 border shrink-0">
                         Deleted
                       </span>
                     ) : null}
@@ -509,7 +515,7 @@ export default function EditorBalconyManager({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-7 w-7 cursor-pointer"
                     title="Move up"
                     disabled={isSaving || isReordering || isDuplicating || balcony.isDeleted || index === 0}
                     suppressHydrationWarning
@@ -522,7 +528,7 @@ export default function EditorBalconyManager({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-7 w-7 cursor-pointer"
                     title="Move down"
                     disabled={isSaving || isReordering || isDuplicating || balcony.isDeleted || index === orderedBalconies.length - 1}
                     suppressHydrationWarning
@@ -539,7 +545,7 @@ export default function EditorBalconyManager({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-7 w-7 cursor-pointer"
                         title="Save name"
                         disabled={
                           isSaving || isReordering ||
@@ -555,7 +561,7 @@ export default function EditorBalconyManager({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-7 w-7 cursor-pointer"
                         title="Cancel edit"
                         disabled={isSaving || isReordering || isDuplicating}
                         suppressHydrationWarning
@@ -569,7 +575,7 @@ export default function EditorBalconyManager({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-7 w-7 cursor-pointer"
                       title="Edit name"
                       disabled={isSaving || isReordering || isDuplicating}
                       suppressHydrationWarning
@@ -587,7 +593,7 @@ export default function EditorBalconyManager({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-7 w-7 cursor-pointer"
                             title="Confirm copy"
                             disabled={
                               isDuplicating || isSaving || isReordering ||
@@ -603,7 +609,7 @@ export default function EditorBalconyManager({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-7 w-7 cursor-pointer"
                             title="Cancel copy"
                             disabled={isDuplicating}
                             suppressHydrationWarning
@@ -617,7 +623,7 @@ export default function EditorBalconyManager({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-7 w-7 cursor-pointer"
                           title="Copy balcony"
                           disabled={isSaving || isReordering || isDuplicating || editingId != null || copyingId != null}
                           suppressHydrationWarning
@@ -631,7 +637,7 @@ export default function EditorBalconyManager({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                        className="h-7 w-7 cursor-pointer text-red-400 hover:text-red-600 hover:bg-red-50"
                         title="Delete balcony"
                         disabled={isSaving || isReordering || isDuplicating || isCopying}
                         suppressHydrationWarning
@@ -645,7 +651,7 @@ export default function EditorBalconyManager({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="h-7 text-xs cursor-pointer"
                       title="Restore balcony"
                       disabled={isSaving || isReordering || isDuplicating}
                       suppressHydrationWarning
@@ -661,7 +667,7 @@ export default function EditorBalconyManager({
                 {!balcony.isDeleted && !isCopying ? (
                   <Link
                     href={`/editor/balcony/${balcony.id}`}
-                    className="shrink-0 inline-flex items-center justify-center px-3 h-7 text-[11px] font-medium rounded-md bg-gray-900 text-white hover:bg-gray-700 transition-colors"
+                    className="shrink-0 inline-flex items-center justify-center px-3 h-7 text-[11px] font-medium rounded-lg bg-rail-light-blue text-white hover:bg-[#333] transition-colors"
                   >
                     Open Editor
                   </Link>
@@ -670,11 +676,12 @@ export default function EditorBalconyManager({
 
               {/* Copy form (inline expansion) */}
               {isCopying ? (
-                <div className="flex flex-wrap items-end gap-2 border-t bg-gray-50 px-3 py-2.5">
-                  <div className="text-[10px] font-semibold text-gray-500 w-full">Copy to new name:</div>
+                <div className="flex flex-wrap items-end gap-2 border-t bg-gray-50 rounded-b-xl px-3 py-2.5">
+                  <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-full">Copy to new name:</div>
                   <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Drop</label>
                     <input
-                      className="w-20 rounded-md border bg-white px-2.5 py-1.5 text-sm"
+                      className="w-20 rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
                       value={copyDraft.drop}
                       suppressHydrationWarning
                       onChange={(e) => {
@@ -683,12 +690,13 @@ export default function EditorBalconyManager({
                       }}
                     />
                     {copyLocalFieldErrors.drop ? (
-                      <div className="text-xs text-red-600">{copyLocalFieldErrors.drop}</div>
+                      <div className="text-[10px] text-red-600">{copyLocalFieldErrors.drop}</div>
                     ) : null}
                   </div>
                   <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Balcony</label>
                     <input
-                      className="w-28 rounded-md border bg-white px-2.5 py-1.5 text-sm"
+                      className="w-28 rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
                       value={copyDraft.balconyNo}
                       suppressHydrationWarning
                       onChange={(e) => {
@@ -697,9 +705,9 @@ export default function EditorBalconyManager({
                       }}
                     />
                     {copyLocalFieldErrors.balconyNo ? (
-                      <div className="text-xs text-red-600">{copyLocalFieldErrors.balconyNo}</div>
+                      <div className="text-[10px] text-red-600">{copyLocalFieldErrors.balconyNo}</div>
                     ) : liveCopyBalconyNoError ? (
-                      <div className="text-xs text-red-600">{liveCopyBalconyNoError}</div>
+                      <div className="text-[10px] text-red-600">{liveCopyBalconyNoError}</div>
                     ) : null}
                   </div>
                 </div>
@@ -708,7 +716,7 @@ export default function EditorBalconyManager({
           );
         })}
       </div>
-      </div>
-    </>
+      </ScrollArea>
+    </div>
   );
 }

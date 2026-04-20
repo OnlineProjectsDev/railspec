@@ -6,8 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
 
 import { z } from "zod";
-import { Form, FormControl } from "@/components/ui/form";
+import { Form, FormControl, FormField } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { TextAreaWithLabel } from "@/components/inputs/TextAreaWithLabel";
@@ -23,7 +24,7 @@ import { selectCustomerSchemaType } from "@/zod-schemas/customer";
 import { useAction } from "next-safe-action/hooks";
 import { saveJobStageAction } from "@/app/actions/saveJobStageActions";
 import { toast } from "sonner";
-import { LoaderCircle } from "lucide-react";
+import { ChevronLeft, LoaderCircle } from "lucide-react";
 import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
 
 import { useEffect, useRef, useState } from "react";
@@ -341,7 +342,7 @@ export default function JobStageForm({
   );
 
   return (
-    <div className="flex flex-col gap-1 sm:px-8">
+    <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
       <DisplayServerActionResponse result={saveStageResult} />
 
       <ContinueToJobDialog
@@ -381,7 +382,6 @@ export default function JobStageForm({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            {/* Save stage only, do NOT touch balconies */}
             <AlertDialogCancel
               onClick={async () => {
                 if (!pendingStageData) return;
@@ -391,21 +391,14 @@ export default function JobStageForm({
             >
               Save stage only
             </AlertDialogCancel>
-
-            {/* Save stage AND apply defaults to balconies */}
             <AlertDialogAction
               onClick={async () => {
                 if (!pendingStageData || !job || !jobStage) return;
-
-                // 1) Save the stage with its updated defaults
                 await executeSaveStage(pendingStageData);
-
-                // 2) Apply those defaults to all balconies on this stage
                 await executeApplyStageDefaults({
                   jobId: job.id,
                   jobStageId: jobStage.id,
                 });
-
                 setPendingStageData(null);
               }}
             >
@@ -415,398 +408,364 @@ export default function JobStageForm({
         </AlertDialogContent>
       </AlertDialog>
 
-      <div>
-        <h2 className="text-2xl font-bold">
-          {job?.id && isEditable
-            ? `Edit Job #${job.job_number}`
-            : job?.job_number
-            ? `View Job #${job.job_number}`
-            : "New Job Form"}
-        </h2>
+      {/* Header */}
+      <div className="bg-white rounded-md px-4 py-3 flex items-center gap-3 flex-wrap flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex items-center gap-1 h-7 px-2.5 rounded-md text-[10px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-200 cursor-pointer"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Back
+        </button>
+        <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          {job ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rail-light-blue text-white text-[11px] font-bold tracking-wide flex-shrink-0">
+              #{job.job_number}
+            </span>
+          ) : null}
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-sm font-semibold text-gray-900 truncate">{customer.company}</span>
+            {jobStage ? (
+              <span className="text-[11px] text-gray-400 flex-shrink-0">· Stage {jobStage.stage}</span>
+            ) : null}
+          </div>
+        </div>
+        {isEditable ? (
+          <div className="flex items-center gap-2">
+            {job ? (
+              <button
+                type="button"
+                onClick={handleGoToJob}
+                className="flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-200 cursor-pointer"
+              >
+                Open in Editor
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                form.reset({
+                  ...defaultValues,
+                  defaults: buildStageDefaultsForForm({ job, jobStage }),
+                });
+                resetSaveStageAction();
+              }}
+              className="flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-200 cursor-pointer"
+            >
+              Reset
+            </button>
+            <button
+              type="submit"
+              form="stage-form"
+              disabled={isSavingStage || isApplyingStageDefaults}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors bg-rail-light-blue text-white hover:bg-[#333] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isSavingStage || isApplyingStageDefaults ? (
+                <><LoaderCircle className="animate-spin h-3 w-3" /> Saving…</>
+              ) : "Save Stage"}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <Form {...form}>
         <form
+          id="stage-form"
           onSubmit={form.handleSubmit(submitForm)}
-          className="flex flex-col md:flex-row gap-4 md:gap-8"
+          className="flex gap-3 flex-1 min-h-0 overflow-hidden"
         >
-          <div className="flex flex-col gap-4 w-full max-w-xs">
-            <p>
-              {customer?.company}, {job?.job_number}, stage: {jobStage?.stage}
-            </p>
+          {/* Left column: Project details */}
+          <div className="w-64 flex-shrink-0 flex flex-col">
+            {job ? (
+              <div className="bg-white rounded-xl p-4 flex flex-col gap-4 flex-1">
+                <span className="text-xs font-semibold text-gray-700">Project</span>
 
-            <div className="space-y-4 mt-4 p-3 border rounded-md">
-              <h3 className="font-semibold">Stage Defaults</h3>
+                <div className="flex flex-col gap-1.5">
+                  <div className="bg-gray-50 rounded-lg px-3 py-2.5">
+                    <div className="text-[10px] text-gray-400 mb-0.5">Client</div>
+                    <div className="text-[11px] font-medium text-gray-800">{customer.company}</div>
+                    <div className="text-[11px] text-gray-500">{customer.firstName} {customer.lastName}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg px-3 py-2.5">
+                    <div className="text-[10px] text-gray-400 mb-0.5">Address</div>
+                    <div className="text-[11px] font-medium text-gray-800">{job.address1}</div>
+                    {job.address2 ? <div className="text-[11px] text-gray-500">{job.address2}</div> : null}
+                    <div className="text-[11px] text-gray-500">{job.city} {job.zip}</div>
+                  </div>
+                </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">Design</label>
-                <Select
-                  value={defaults.design_default ?? "RD-D1"}
-                  onValueChange={(v) => updateDefaults({ design_default: v as JobStageDefaults["design_default"] })}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Select design" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {[
-                      "RD-D1",
-                      "RD-D2",
-                      "RD-D3",
-                      "RD-D3SLATS",
-                      "RD-D4",
-                      "RD-D4SLATS",
-                      "RD-D5",
-                      "RD-D6",
-                      "RD-D7",
-                      "RD-D8",
-                      "RD-D9",
-                      "RD-D10",
-                      "RD-D11",
-                      "RD-D12",
-                      "RD-D13",
-                    ].map((opt) => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-gray-700">Job Defaults</span>
+                  <div className="bg-gray-50 rounded-lg px-3 py-2.5 flex flex-col gap-1">
+                    <div className="flex justify-between gap-2 text-[11px]"><span className="text-gray-400">Design</span><span className="text-gray-700 font-medium">{job.design_default}</span></div>
+                    <div className="flex justify-between gap-2 text-[11px]"><span className="text-gray-400">Anchorage</span><span className="text-gray-700 font-medium">{job.anchorage_default}</span></div>
+                    <div className="flex justify-between gap-2 text-[11px]"><span className="text-gray-400">Toprail</span><span className="text-gray-700 font-medium">{job.toprail_default}</span></div>
+                    <div className="flex justify-between gap-2 text-[11px]"><span className="text-gray-400">Infill</span><span className="text-gray-700 font-medium">{job.infill_default}</span></div>
+                    <div className="flex justify-between gap-2 text-[11px]"><span className="text-gray-400">Status</span><span className="text-gray-700 font-medium capitalize">{job.project_status}</span></div>
+                  </div>
+                </div>
+
+                {job.notes ? (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-gray-700">Notes</span>
+                    <div className="bg-gray-50 rounded-lg px-3 py-2.5 text-[11px] text-gray-600">{job.notes}</div>
+                  </div>
+                ) : null}
               </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">Infill</label>
-                <Select
-                  value={defaults.infill_default ?? ""}
-                  onValueChange={(v) => updateDefaults({ infill_default: v as JobStageDefaults["infill_default"] })}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Select infill" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {glassOptions.map((opt) => (
-                      <SelectItem key={opt.id} value={opt.id}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {designRequiresGlass && glassClashing && (
-                  <span className="text-xs text-amber-600">
-                    Infill “{defaults.infill_default}” is not valid for design {effectiveDesign}.
-                  </span>
-                )}
+            ) : (
+              <div className="bg-white rounded-xl p-4 flex flex-col gap-2 flex-1">
+                <span className="text-xs font-semibold text-gray-700">Project</span>
+                <div className="bg-gray-50 rounded-lg px-3 py-2.5">
+                  <div className="text-[11px] font-medium text-gray-800">{customer.company}</div>
+                  <div className="text-[11px] text-gray-500">{customer.firstName} {customer.lastName}</div>
+                </div>
               </div>
+            )}
+          </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">Top rail</label>
-                <Select
-                  value={defaults.toprail_default ?? ""}
-                  onValueChange={(v) => updateDefaults({ toprail_default: v as JobStageDefaults["toprail_default"] })}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Select toprail" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {toprailOptions.map((opt) => (
-                      <SelectItem key={opt.id} value={opt.id}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {toprailClashing && (
-                  <span className="text-xs text-amber-600">
-                    Toprail “{defaults.toprail_default}” is not valid for design {effectiveDesign}.
-                  </span>
-                )}
-              </div>
+          {/* Middle column: Railing defaults, wind load, constraints, template */}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <ScrollArea className="h-full">
+            <div className="bg-white rounded-xl flex flex-col mr-2">
+              <div className="p-4 flex flex-col gap-4">
+              <span className="text-xs font-semibold text-gray-700">Railing Defaults</span>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">Anchorage</label>
-                <Select
-                  value={defaults.anchorage_default ?? ""}
-                  onValueChange={(v) => updateDefaults({ anchorage_default: v as JobStageDefaults["anchorage_default"] })}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full max-w-xs">
-                      <SelectValue placeholder="Select anchorage" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {anchorageOptions.map((opt) => (
-                      <SelectItem key={opt.id} value={opt.id}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {anchorageClashing && (
-                  <span className="text-xs text-amber-600">
-                    Anchorage “{defaults.anchorage_default}” is not valid for design {effectiveDesign}.
-                  </span>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Wind load</label>
-
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium">Building height</span>
+                  <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Design</label>
                   <Select
-                    value={String(defaults.wind_load.bldg_height)}
-                    onValueChange={(v) =>
-                      updateDefaults({
-                        wind_load: {
-                          ...defaults.wind_load,
-                          bldg_height: Number(v),
-                        },
-                      })
-                    }
+                    value={defaults.design_default ?? "RD-D1"}
+                    onValueChange={(v) => updateDefaults({ design_default: v as JobStageDefaults["design_default"] })}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full max-w-xs">
-                        <SelectValue placeholder="Select building height" />
+                      <SelectTrigger className="w-full h-8 text-[11px]">
+                        <SelectValue placeholder="Select design" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="30">&lt;30m</SelectItem>
-                      <SelectItem value="50">&lt;50m</SelectItem>
-                      <SelectItem value="75">&lt;75m</SelectItem>
+                      {["RD-D1","RD-D2","RD-D3","RD-D3SLATS","RD-D4","RD-D4SLATS","RD-D5","RD-D6","RD-D7","RD-D8","RD-D9","RD-D10","RD-D11","RD-D12","RD-D13"].map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium">Wind region</span>
+                  <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Infill</label>
                   <Select
-                    value={defaults.wind_load.wind_region}
-                    onValueChange={(v) =>
-                      updateDefaults({
-                        wind_load: {
-                          ...defaults.wind_load,
-                          wind_region: v as JobStageDefaults["wind_load"]["wind_region"],
-                        },
-                      })
-                    }
+                    value={defaults.infill_default ?? ""}
+                    onValueChange={(v) => updateDefaults({ infill_default: v as JobStageDefaults["infill_default"] })}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full max-w-xs">
-                        <SelectValue placeholder="Select wind region" />
+                      <SelectTrigger className="w-full h-8 text-[11px]">
+                        <SelectValue placeholder="Select infill" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="A">Region A</SelectItem>
-                      <SelectItem value="B">Region B</SelectItem>
-                      <SelectItem value="C">Region C</SelectItem>
-                      <SelectItem value="D">Region D</SelectItem>
+                      {glassOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  {designRequiresGlass && glassClashing && (
+                    <span className="text-[10px] text-amber-600">
+                      Infill &quot;{defaults.infill_default}&quot; is not valid for design {effectiveDesign}.
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium">Terrain category</span>
+                  <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Top rail</label>
                   <Select
-                    value={String(defaults.wind_load.terrain_category)}
-                    onValueChange={(v) =>
-                      updateDefaults({
-                        wind_load: {
-                          ...defaults.wind_load,
-                          terrain_category: Number(v),
-                        },
-                      })
-                    }
+                    value={defaults.toprail_default ?? ""}
+                    onValueChange={(v) => updateDefaults({ toprail_default: v as JobStageDefaults["toprail_default"] })}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full max-w-xs">
-                        <SelectValue placeholder="Select terrain category" />
+                      <SelectTrigger className="w-full h-8 text-[11px]">
+                        <SelectValue placeholder="Select toprail" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3">3</SelectItem>
+                      {toprailOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  {toprailClashing && (
+                    <span className="text-[10px] text-amber-600">
+                      Toprail &quot;{defaults.toprail_default}&quot; is not valid for design {effectiveDesign}.
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Anchorage</label>
+                  <Select
+                    value={defaults.anchorage_default ?? ""}
+                    onValueChange={(v) => updateDefaults({ anchorage_default: v as JobStageDefaults["anchorage_default"] })}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full h-8 text-[11px]">
+                        <SelectValue placeholder="Select anchorage" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {anchorageOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {anchorageClashing && (
+                    <span className="text-[10px] text-amber-600">
+                      Anchorage &quot;{defaults.anchorage_default}&quot; is not valid for design {effectiveDesign}.
+                    </span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <h4 className="text-sm font-semibold">Constraint Defaults</h4>
+              <div className="border-t pt-4 flex flex-col gap-3">
+                <span className="text-xs font-semibold text-gray-700">Wind Load</span>
 
-                <label className="text-sm font-medium">Min barrier height (mm)</label>
-                <input
-                  type="number"
-                  min={900}
-                  max={1800}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.minBarrierHeight)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        minBarrierHeight: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
+                <div className="grid grid-cols-3 gap-x-3 gap-y-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Building height</label>
+                    <Select
+                      value={String(defaults.wind_load.bldg_height)}
+                      onValueChange={(v) => updateDefaults({ wind_load: { ...defaults.wind_load, bldg_height: Number(v) } })}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-8 text-[11px]">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="30">&lt;30m</SelectItem>
+                        <SelectItem value="50">&lt;50m</SelectItem>
+                        <SelectItem value="75">&lt;75m</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <label className="text-sm font-medium">Max barrier height (mm)</label>
-                <input
-                  type="number"
-                  min={900}
-                  max={1800}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.maxBarrierHeight)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        maxBarrierHeight: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Wind region</label>
+                    <Select
+                      value={defaults.wind_load.wind_region}
+                      onValueChange={(v) => updateDefaults({ wind_load: { ...defaults.wind_load, wind_region: v as JobStageDefaults["wind_load"]["wind_region"] } })}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-8 text-[11px]">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="A">Region A</SelectItem>
+                        <SelectItem value="B">Region B</SelectItem>
+                        <SelectItem value="C">Region C</SelectItem>
+                        <SelectItem value="D">Region D</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <label className="text-sm font-medium">Panel height (mm)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={1800}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.panelHeight)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        panelHeight: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-
-                <label className="text-sm font-medium">Max panel height (mm)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={1800}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.maxPanelHeight)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        maxPanelHeight: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-
-                <label className="text-sm font-medium">Max post spacing (mm)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={2000}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.maxPostSpacing)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        maxPostSpacing: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-
-                <label className="text-sm font-medium">Max bottom gap (mm)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={1000}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.maxBottomGap)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        maxBottomGap: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-
-                <label className="text-sm font-medium">Min post length (mm)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={2000}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.minPostLength)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        minPostLength: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-
-                <label className="text-sm font-medium">Laser level Y (mm)</label>
-                <input
-                  type="number"
-                  min={-5000}
-                  max={5000}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.laserLevelY)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        laserLevelY: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-
-                <label className="text-sm font-medium">Top Y (mm)</label>
-                <input
-                  type="number"
-                  min={-5000}
-                  max={5000}
-                  className="input w-full max-w-xs"
-                  value={String(defaults.constraints.topY ?? defaults.constraints.minBarrierHeight)}
-                  suppressHydrationWarning
-                  onChange={(e) =>
-                    updateDefaults({
-                      constraints: {
-                        topY: Number(e.target.value),
-                      },
-                    })
-                  }
-                />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Terrain cat.</label>
+                    <Select
+                      value={String(defaults.wind_load.terrain_category)}
+                      onValueChange={(v) => updateDefaults({ wind_load: { ...defaults.wind_load, terrain_category: Number(v) } })}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-8 text-[11px]">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="3">3</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">Template preset</label>
+              <div className="border-t pt-4 flex flex-col gap-3">
+                <span className="text-xs font-semibold text-gray-700">Constraints</span>
+                <div className="grid grid-cols-3 gap-x-3 gap-y-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Min barrier height (mm)</label>
+                    <input type="number" min={900} max={1800} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.minBarrierHeight)}
+                      onChange={(e) => updateDefaults({ constraints: { minBarrierHeight: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Max barrier height (mm)</label>
+                    <input type="number" min={900} max={1800} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.maxBarrierHeight)}
+                      onChange={(e) => updateDefaults({ constraints: { maxBarrierHeight: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Panel height (mm)</label>
+                    <input type="number" min={0} max={1800} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.panelHeight)}
+                      onChange={(e) => updateDefaults({ constraints: { panelHeight: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Max panel height (mm)</label>
+                    <input type="number" min={0} max={1800} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.maxPanelHeight)}
+                      onChange={(e) => updateDefaults({ constraints: { maxPanelHeight: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Max post spacing (mm)</label>
+                    <input type="number" min={0} max={2000} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.maxPostSpacing)}
+                      onChange={(e) => updateDefaults({ constraints: { maxPostSpacing: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Max bottom gap (mm)</label>
+                    <input type="number" min={0} max={1000} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.maxBottomGap)}
+                      onChange={(e) => updateDefaults({ constraints: { maxBottomGap: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Min post length (mm)</label>
+                    <input type="number" min={0} max={2000} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.minPostLength)}
+                      onChange={(e) => updateDefaults({ constraints: { minPostLength: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-gray-400 font-medium">Laser level Y (mm)</label>
+                    <input type="number" min={-5000} max={5000} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.laserLevelY)}
+                      onChange={(e) => updateDefaults({ constraints: { laserLevelY: Number(e.target.value) } })} />
+                  </div>
+                  <div className="flex flex-col gap-1 col-span-3">
+                    <label className="text-[10px] text-gray-400 font-medium">Top Y (mm)</label>
+                    <input type="number" min={-5000} max={5000} suppressHydrationWarning
+                      className="w-full rounded-md border bg-white px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      value={String(defaults.constraints.topY ?? defaults.constraints.minBarrierHeight)}
+                      onChange={(e) => updateDefaults({ constraints: { topY: Number(e.target.value) } })} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 flex flex-col gap-1">
+                <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Template preset</label>
                 <Select
                   value={defaults.template?.preset ?? "default-rectangular"}
-                  onValueChange={(v) =>
-                    updateDefaults({
-                      template: {
-                        preset: v,
-                      },
-                    })
-                  }
+                  onValueChange={(v) => updateDefaults({ template: { preset: v } })}
                 >
                   <FormControl>
-                    <SelectTrigger className="w-full max-w-xs">
+                    <SelectTrigger className="w-full h-8 text-[11px]">
                       <SelectValue placeholder="Select template preset" />
                     </SelectTrigger>
                   </FormControl>
@@ -818,103 +777,73 @@ export default function JobStageForm({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 w-full max-w-xs">
-            <NumberInputWithLabel<insertJobStagesSchemaType>
-              fieldTitle="Stage"
-              nameInSchema="stage"
-              min={1}
-              max={10}
-              disabled={true}
-            />
-
-            <SelectWithLabel<insertJobStagesSchemaType>
-              fieldTitle="Status"
-              nameInSchema="status"
-              data={[
-                { id: "draft", description: "Draft" },
-                { id: "started", description: "Started" },
-                { id: "completed", description: "Completed" },
-              ]}
-            />
-
-            <TextAreaWithLabel<insertJobStagesSchemaType>
-              fieldTitle="Notes"
-              nameInSchema="notes"
-              className="h-96"
-              disabled={!isEditable}
-            />
-
-            {isEditable ? (
-              <div className="flex gap 2">
-                <Button
-                  type="submit"
-                  className="w-2/4"
-                  variant="default"
-                  title="Save"
-                  disabled={isSavingStage || isApplyingStageDefaults}
-                >
-                  {isSavingStage || isApplyingStageDefaults ? (
-                    <>
-                      <LoaderCircle className="animate-spin" /> Saving
-                    </>
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="destructive"
-                  title="Reset"
-                  onClick={() => {
-                    form.reset({
-                      ...defaultValues,
-                      defaults: buildStageDefaultsForForm({ job, jobStage }),
-                    });
-                    resetSaveStageAction();
-                  }}
-                >
-                  Reset
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  title="To Job"
-                  onClick={handleGoToJob}
-                >
-                  To Job
-                </Button>
               </div>
-            ) : null}
+            </div>
+            </ScrollArea>
           </div>
 
-          <div className="mt-4 space-y-2">
-            <h3 className="text-lg">Job Info</h3>
-            <hr className="w-4/5" />
-            <p>
-              Client: {customer.company} - {customer.firstName}{" "}
-              {customer.lastName}
-            </p>
-            <p>Address: {job?.address1}</p>
-            {job?.address2 ? <p>{job?.address2}</p> : null}
-            <p>
-              City: {job?.city}, {job?.zip}
-            </p>
+          {/* Right column: Stage settings + notes */}
+          <div className="w-64 flex-shrink-0 flex flex-col">
+            <div className="bg-white rounded-xl p-4 flex flex-col gap-4 flex-1">
+              <span className="text-xs font-semibold text-gray-700">Stage Settings</span>
 
-            <hr className="w-4/5" />
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Stage</label>
+                <FormField
+                  control={form.control}
+                  name="stage"
+                  render={({ field }) => (
+                    <input
+                      type="number"
+                      disabled
+                      suppressHydrationWarning
+                      className="w-full rounded-md border bg-gray-50 px-2.5 py-1.5 text-[11px] text-gray-400 outline-none cursor-not-allowed"
+                      value={field.value ?? ""}
+                      onChange={() => {}}
+                    />
+                  )}
+                />
+              </div>
 
-            <p>Status: {job?.project_status}</p>
-            <p>Design: {job?.design_default}</p>
-            <p>Anchorage: {job?.anchorage_default}</p>
-            <p>Top rail: {job?.toprail_default}</p>
-            <p>Infill: {job?.infill_default}</p>
-            <p>Wind load: {JSON.stringify(job?.wind_load)}</p>
-            <p>Notes: {job?.notes}</p>
-            <hr className="w-4/5" />
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Status</label>
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full h-8 text-[11px]">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="started">Started</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wide">Notes</label>
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <textarea
+                      disabled={!isEditable}
+                      suppressHydrationWarning
+                      className="flex-1 w-full rounded-md border bg-white px-2.5 py-2 text-[11px] text-gray-700 outline-none focus:ring-1 focus:ring-ring resize-none disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed min-h-32"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </form>
       </Form>

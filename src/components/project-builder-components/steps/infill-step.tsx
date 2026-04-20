@@ -43,7 +43,7 @@ export default function InfillStep() {
       </p>
 
       {/* Options grid */}
-      <ScrollArea className="flex-1 min-h-0 pr-1">
+      <ScrollArea className="flex-1 min-h-0 pr-2">
         <div className="grid grid-cols-2 gap-2.5 pb-2">
           {infillOptions.map((opt, index) => {
             const isSelected = currentInfill === opt.id;

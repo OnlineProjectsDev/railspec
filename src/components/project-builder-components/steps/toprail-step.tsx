@@ -26,7 +26,7 @@ export default function ToprailStep() {
 
   return (
     <div className="flex flex-col gap-2 w-full flex-1 min-h-0">
-      <ScrollArea className="flex-1 min-h-0 pr-1">
+      <ScrollArea className="flex-1 min-h-0 pr-2">
         <div className="grid grid-cols-2 gap-2 w-full content-start pb-2">
         {toprailOptions.map((opt, index) => {
           const isSelected = currentToprail === opt.id;

@@ -1,1 +1,0 @@
-ALTER TABLE "balconies" ADD COLUMN IF NOT EXISTS "sort_order" integer DEFAULT 0 NOT NULL;

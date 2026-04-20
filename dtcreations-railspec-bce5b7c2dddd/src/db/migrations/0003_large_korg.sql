@@ -1,1 +1,0 @@
-ALTER TABLE "jobs" ADD COLUMN "height_default" integer DEFAULT 1020 NOT NULL;

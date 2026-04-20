@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 function Chip({ label }: { label: string }) {
   return (
@@ -219,6 +220,7 @@ export default function LeftPanel({
   selectedTarget,
   onReturnToProject,
   isDirty = false,
+  stageSettingsHref,
 }: {
   state: RootState
   dispatch: React.Dispatch<Action>
@@ -226,6 +228,7 @@ export default function LeftPanel({
   selectedTarget: InspectorTarget
   onReturnToProject?: () => void
   isDirty?: boolean
+  stageSettingsHref?: string
 }) {
   const selectedCount = state.selectedPostIds.length
   const selectedPost =
@@ -245,15 +248,15 @@ export default function LeftPanel({
     <aside
       style={{
         width: 360,
+        height: "100%",
         borderRight: "1px solid #E5E7EB",
         background: "#F3F4F6",
-        padding: 14,
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        overflowY: "auto",
+        overflow: "hidden",
+        alignSelf: "stretch",
       }}
     >
+      <ScrollArea className="h-full">
+      <div style={{ padding: 14, paddingRight: 18, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
 
       {state.editorContext === "project" ? (
@@ -273,6 +276,26 @@ export default function LeftPanel({
             <div style={{ fontSize: 12, color: "#6B7280" }}>
               {isDirty ? "Unsaved changes will require confirmation before leaving." : "No unsaved changes."}
             </div>
+
+            {stageSettingsHref ? (
+              <a
+                href={stageSettingsHref}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  border: "1px solid #E5E7EB",
+                  background: "#F9FAFB",
+                  color: "#111827",
+                  textDecoration: "none",
+                }}
+              >
+                Stage Settings
+              </a>
+            ) : null}
           </div>
         </Section>
       ) : null}
@@ -782,6 +805,8 @@ export default function LeftPanel({
         </Section>
       ) : null} */}
 
+      </div>
+      </ScrollArea>
     </aside>
   )
 }

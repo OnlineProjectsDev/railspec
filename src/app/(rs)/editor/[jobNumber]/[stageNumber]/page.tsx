@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 
 import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { getCustomer, getCurrentCustomer } from "@/lib/queries/getCustomer";
 import { getJobStageByJobAndStage, getAllStagesForJobnoDefaults } from "@/lib/queries/getJobStage";
@@ -317,34 +318,35 @@ export default async function EditorStagePage({ params, searchParams }: PageProp
       : currentRevisionCode ?? "unsynced";
 
     return (
-      <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
+      <div className="flex flex-col gap-3 flex-1 min-h-0">
         {/* Header */}
         <div className="bg-white rounded-md px-4 py-3 flex items-center gap-3 flex-wrap flex-shrink-0">
-          <BackButton title="Back" variant="outline" className="h-8 text-[11px]" />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-gray-900">
-              #{job.job_number} · {customer.company}
-            </div>
-            <div className="text-[11px] text-gray-400 mt-0.5">
-              Stage {jobStage.stage}
-              {siteAddressLine ? ` · ${siteAddressLine}${cityLine ? `, ${cityLine}` : ""}` : ""}
+          <BackButton title="Back" className="h-7 text-[10px] bg-[#f5f5f5] text-gray-700 hover:bg-gray-200 border-0 shadow-none" />
+          <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rail-light-blue text-white text-[11px] font-bold tracking-wide flex-shrink-0">
+              #{job.job_number}
+            </span>
+            <div className="flex items-baseline gap-1.5 min-w-0">
+              <span className="text-sm font-semibold text-gray-900 truncate">{customer.company}</span>
+              <span className="text-[11px] text-gray-400 flex-shrink-0">· Stage {jobStage.stage}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href={`/project-builder/${job.job_number}`}
-              className="inline-flex items-center px-3 h-8 text-[11px] rounded-md border hover:bg-gray-50 transition-colors"
+              className="flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-200 cursor-pointer"
             >
               Project Builder
             </Link>
             <Link
               href={`/jobs/stage?jobId=${job.id}&stage=${jobStage.stage}`}
-              className="inline-flex items-center px-3 h-8 text-[11px] rounded-md border hover:bg-gray-50 transition-colors"
+              className="flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors bg-[#f5f5f5] text-gray-700 hover:bg-gray-200 cursor-pointer"
             >
               Stage Settings
             </Link>
             <form action={createNextStageAction}>
-              <Button type="submit" className="h-8 text-[11px]">
+              <Button type="submit" className="h-auto px-2.5 py-1 text-[10px] font-medium bg-rail-light-blue text-white hover:bg-[#333]">
                 Add Stage {existingStages.length
                   ? Math.max(...existingStages.map((s) => s.stage)) + 1
                   : 1}
@@ -356,7 +358,9 @@ export default async function EditorStagePage({ params, searchParams }: PageProp
         {/* Two-column body */}
         <div className="flex gap-3 flex-1 min-h-0">
           {/* Left sidebar: stage outputs + project details */}
-          <div className="w-72 flex-shrink-0 flex flex-col gap-3 overflow-y-auto">
+          <div className="w-72 flex-shrink-0 overflow-hidden">
+          <ScrollArea className="h-full">
+          <div className="flex flex-col gap-3 pr-3">
             <EditorStageOrderLinks
               jobNumber={job.job_number}
               stageNumber={jobStage.stage}
@@ -368,7 +372,7 @@ export default async function EditorStagePage({ params, searchParams }: PageProp
               selectedRevisionOption={selectedRevisionOption}
             />
 
-            {/* Project details */}
+            {/* Project & Stage details */}
             <div className="bg-white rounded-xl p-4 flex flex-col gap-4 flex-shrink-0">
               <span className="text-xs font-semibold text-gray-700">Project</span>
 
@@ -405,18 +409,8 @@ export default async function EditorStagePage({ params, searchParams }: PageProp
                 </div>
               </div>
 
-              {job.notes ? (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold text-gray-700">Notes</span>
-                  <div className="bg-gray-50 rounded-lg px-3 py-2.5 text-[11px] text-gray-600">{job.notes}</div>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Stage details */}
-            <div className="bg-white rounded-xl p-4 flex flex-col gap-3 flex-shrink-0">
-              <span className="text-xs font-semibold text-gray-700">Stage {jobStage.stage}</span>
-              <div className="flex flex-col gap-1.5">
+              <div className="border-t pt-3 flex flex-col gap-1.5">
+                <span className="text-xs font-semibold text-gray-700">Stage {jobStage.stage}</span>
                 <div className="bg-gray-50 rounded-lg px-3 py-2.5 flex justify-between items-center">
                   <span className="text-[11px] text-gray-400">Status</span>
                   <span className="text-[11px] font-medium text-gray-700 capitalize">{jobStage.status ?? "draft"}</span>
@@ -428,37 +422,25 @@ export default async function EditorStagePage({ params, searchParams }: PageProp
                   </div>
                 ) : null}
               </div>
+
+              {job.notes ? (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-gray-700">Job Notes</span>
+                  <div className="bg-gray-50 rounded-lg px-3 py-2.5 text-[11px] text-gray-600">{job.notes}</div>
+                </div>
+              ) : null}
             </div>
+          </div>
+          </ScrollArea>
           </div>
 
           {/* Right: balconies */}
-          <div className="flex-1 min-w-0 flex flex-col gap-3">
-            <div className="bg-white rounded-md overflow-hidden">
-              {/* Balcony header */}
-              <div className="px-4 py-3 border-b flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-semibold text-gray-900">Editor Balconies</span>
-                  <span className="text-[10px] text-gray-400">
-                    {activeEditorBalconies.length} active
-                    {deletedEditorBalconies.length ? ` • ${deletedEditorBalconies.length} deleted` : ""}
-                  </span>
-                </div>
-                <Link
-                  href={
-                    includeDeleted
-                      ? `/editor/${job.job_number}/${jobStage.stage}`
-                      : `/editor/${job.job_number}/${jobStage.stage}?showDeleted=1`
-                  }
-                  className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {includeDeleted ? "Hide deleted" : "Show deleted"}
-                </Link>
-              </div>
-
+          <div className="flex-1 min-w-0 flex flex-col min-h-0">
+            <div className="bg-white rounded-md overflow-hidden flex-1 flex flex-col">
               {/* Body: balcony list + template picker side-by-side */}
-              <div className="flex min-h-0">
+              <div className="flex flex-1 min-h-0">
                 {/* Balcony list */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 h-full overflow-hidden">
                   <EditorBalconyManager
                     jobId={job.id}
                     jobStageId={jobStage.id}
@@ -474,7 +456,7 @@ export default async function EditorStagePage({ params, searchParams }: PageProp
                   <div className="px-4 py-3 border-b">
                     <span className="text-xs font-semibold text-gray-900">Add Balcony</span>
                   </div>
-                  <div className="p-3 flex flex-col gap-2 flex-1">
+                  <div className="p-3 flex flex-col flex-1 min-h-0">
                     <CreateEditorBalconyTemplatePicker
                       jobId={job.id}
                       jobStageId={jobStage.id}

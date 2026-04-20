@@ -1,6 +1,6 @@
 'use client'
 
-import { LogOut, Menu, X, LayoutDashboard, HelpCircle, MessageCircle, Calendar, Package, Search, User } from 'lucide-react';
+import { LogOut, Menu, X, LayoutDashboard, HelpCircle, MessageCircle, Calendar, Package, Search, User, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { LogoutLink } from '@kinde-oss/kinde-auth-nextjs/components';
@@ -22,6 +22,7 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import { usePathname } from "next/navigation";
+import { useBuilderNavStore } from "@/lib/builderNavStore";
 
 export function Header() {
 
@@ -29,6 +30,19 @@ export function Header() {
     const [searchOpen, setSearchOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
+    const { backToJobHref, jobNumber } = useBuilderNavStore();
+
+    // Breadcrumb context derived from pathname
+    const breadcrumb = (() => {
+        if (pathname === "/projects") return "Dashboard";
+        if (pathname === "/orders") return "Orders";
+        if (pathname === "/account") return "Account";
+        if (pathname.startsWith("/project-builder")) return "Project Builder";
+        if (pathname.startsWith("/editor")) return "Editor";
+        if (pathname.startsWith("/jobs")) return "Stage Settings";
+        if (pathname.startsWith("/customers")) return "Customers";
+        return null;
+    })();
 
     useEffect(() => {
         setMenuOpen(false);
@@ -59,32 +73,43 @@ export function Header() {
 
     return (
         <>
-        <header className="animate-slide bg-background p-4 rounded-md">
-            <div className="flex h-8 items-center justify-between w-full">
-                <div className="flex items-center gap-2">
-                    <Link href="/projects" className="cursor-pointer" title="Projects">
+        <header className="animate-slide bg-white rounded-xl px-4 py-2.5">
+            <div className="flex items-center justify-between w-full gap-4">
+                {/* Left — Logo */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                    <Link href="/projects" className="cursor-pointer" title="Dashboard">
                         <Image 
                             src="/images/logos/RAILSPEC-logo.svg" 
                             alt="RailSpec Logo" 
-                            width={120}
-                            height={40}
-                            className="object-contain h-10 auto"
+                            width={110}
+                            height={36}
+                            className="object-contain h-8"
                             priority
                             quality={75}
                         />
                     </Link>
+                    <div className="w-px h-5 bg-gray-200" />
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {/* Search trigger */}
+                {/* Center — page breadcrumb */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {breadcrumb && (
+                        <span className="text-[12px] font-medium text-gray-700 truncate">
+                            {breadcrumb}
+                        </span>
+                    )}
+                </div>
+
+                {/* Right — utility actions */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button
                                 onClick={() => setSearchOpen(true)}
                                 aria-label="Search"
-                                className="h-9 w-9 inline-flex items-center justify-center rounded-md bg-muted text-muted-foreground hover:bg-rail-light-blue hover:text-white transition-colors cursor-pointer"
+                                className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-rail-light-blue hover:text-white transition-colors cursor-pointer"
                             >
-                                <Search size={16} />
+                                <Search size={14} />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>Search <kbd className="ml-1 font-mono text-[10px]">⌘K</kbd></TooltipContent>
@@ -96,11 +121,11 @@ export function Header() {
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Log out"
-                                className="h-9 w-9 rounded-md bg-muted cursor-pointer hover:bg-rail-light-blue hover:text-white transition-colors"
+                                className="h-8 w-8 rounded-lg bg-gray-100 text-gray-500 cursor-pointer hover:bg-rail-light-blue hover:text-white transition-colors"
                                 asChild
                             >
                                 <LogoutLink>
-                                    <LogOut size={16} />
+                                    <LogOut size={14} />
                                 </LogoutLink>
                             </Button>
                         </TooltipTrigger>
@@ -112,10 +137,10 @@ export function Header() {
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Open menu"
-                                className="h-9 w-9 rounded-md bg-muted cursor-pointer hover:bg-rail-light-blue hover:text-white transition-colors"
+                                className="h-8 w-8 rounded-lg bg-gray-100 text-gray-500 cursor-pointer hover:bg-rail-light-blue hover:text-white transition-colors"
                                 onClick={() => setMenuOpen(true)}
                             >
-                                <Menu size={16} />
+                                <Menu size={14} />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>Menu</TooltipContent>
