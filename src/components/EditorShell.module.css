@@ -6,11 +6,13 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  font-family: 'Open Sauce Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 .canvasHost {
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 
 /* Canvas2D surface */
@@ -21,26 +23,26 @@
   background: #f6f7f9;
 }
 
-/* Top-left toolbar */
+/* Floating toolbar */
 .toolbar {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 1rem;
+  left: calc(var(--toolbar-left, 1rem) + 38px);
+  right: 1rem;
   z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
-
-  /* IMPORTANT: let SVG still receive events except the controls themselves */
   pointer-events: none;
+  transition: left 180ms ease;
 }
 
 .toolbarRow {
   pointer-events: auto;
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .floatingCard {
@@ -66,7 +68,7 @@
   padding: 8px 10px;
   border-radius: 10px;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1;
 
@@ -98,7 +100,7 @@
   padding: 8px 10px;
   border-radius: 10px;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1;
 
@@ -111,13 +113,13 @@
 }
 
 .label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #6b7280;
 }
 
 .metaText {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #111827;
   white-space: nowrap;
@@ -129,12 +131,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  width: 100%;
 
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(8px);
 }
 
@@ -146,7 +149,7 @@
 }
 
 .toolbarGroupLabel {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #6b7280;
   text-transform: uppercase;
@@ -166,4 +169,17 @@
   border-radius: 10px;
   overflow: hidden;
   background: #f9fafb;
+}
+
+/* Floating left panel */
+.leftPanelFloat {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
 }

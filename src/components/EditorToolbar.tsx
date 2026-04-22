@@ -29,7 +29,7 @@ function Segmented({
             style={{
               border: "none",
               borderRadius: 0,
-              background: active ? "#111827" : "transparent",
+              background: active ? "#8DB2D1" : "transparent",
               color: disabled ? "#9CA3AF" : active ? "#FFFFFF" : "#111827",
               padding: "8px 10px",
               opacity: disabled ? 0.6 : 1,
@@ -64,7 +64,7 @@ function ToolPill({
       className={styles.btn}
       title={title}
       style={{
-        background: active ? "#111827" : "#FFFFFF",
+        background: active ? "#8DB2D1" : "#FFFFFF",
         color: active ? "#FFFFFF" : "#111827",
       }}
       onClick={onClick}
@@ -313,7 +313,7 @@ export default function EditorToolbar({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Rebuild balustrade?</div>
-            <div style={{ fontSize: 13, color: "#374151", marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: "#374151", marginBottom: 12 }}>
               This will overwrite your current saved balustrade layout with a newly derived layout from the substrate.
             </div>
 
@@ -330,7 +330,7 @@ export default function EditorToolbar({
 
               <button
                 className={styles.btn}
-                style={{ flex: 1, padding: "10px 12px", background: "#111827", color: "#fff" }}
+                style={{ flex: 1, padding: "10px 12px", background: "#8DB2D1", color: "#fff" }}
                 onClick={() => {
                   setShowDeriveConfirm(false)
                   dispatch({ type: "DERIVE_BALUSTRADE_FROM_FLOOR" })
@@ -340,7 +340,7 @@ export default function EditorToolbar({
               </button>
             </div>
 
-            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 10 }}>
+            <div style={{ fontSize: 11, color: "#6B7280", marginTop: 10 }}>
               Tip: click outside this dialog to cancel.
             </div>
           </div>

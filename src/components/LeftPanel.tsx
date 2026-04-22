@@ -24,7 +24,7 @@ function Chip({ label }: { label: string }) {
         alignItems: "center",
         padding: "2px 8px",
         borderRadius: 999,
-        fontSize: 12,
+        fontSize: 11,
         border: "1px solid #E5E7EB",
         background: "#F9FAFB",
         color: "#111827",
@@ -51,13 +51,13 @@ function Section({
         border: "1px solid #E5E7EB",
         borderRadius: 12,
         padding: 12,
-        background: "#FFFFFF",
+        background: "#F9FAFB",
         boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
         <div style={{ fontWeight: 600, color: "#111827" }}>{title}</div>
-        {description ? <div style={{ fontSize: 12, color: "#6B7280" }}>{description}</div> : null}
+        {description ? <div style={{ fontSize: 11, color: "#6B7280" }}>{description}</div> : null}
       </div>
       {children}
     </div>
@@ -93,11 +93,11 @@ function Segmented({
             style={{
               flex: 1,
               padding: "8px 10px",
-              fontSize: 13,
+              fontSize: 12,
               borderRadius: 0,
               border: "none",
               cursor: "pointer",
-              background: active ? "#111827" : "transparent",
+              background: active ? "#8DB2D1" : "transparent",
               color: active ? "#FFFFFF" : "#111827",
               fontWeight: active ? 600 : 500,
             }}
@@ -129,7 +129,7 @@ function Field({
 }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{label}</div>
       <NumericInput
         className={styles.input}
         style={{ width: "100%", background: disabled ? "#F3F4F6" : "#FFFFFF" }}
@@ -168,15 +168,15 @@ function TogglePill({
         padding: "8px 10px",
         borderRadius: 999,
         border: "1px solid #E5E7EB",
-        background: on ? "#111827" : "#FFFFFF",
+      background: on ? "#8DB2D1" : "#FFFFFF",
         color: on ? "#FFFFFF" : "#111827",
         cursor: "pointer",
         fontWeight: 600,
-        fontSize: 13,
+        fontSize: 12,
       }}
     >
       {label}
-      <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.9 }}>{on ? "ON" : "OFF"}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.9 }}>{on ? "ON" : "OFF"}</span>
     </button>
   )
 }
@@ -201,10 +201,10 @@ function ToolButton({
         padding: "10px 12px",
         borderRadius: 12,
         border: "1px solid #E5E7EB",
-        background: active ? "#111827" : "#FFFFFF",
+        background: active ? "#8DB2D1" : "#FFFFFF",
         color: active ? "#FFFFFF" : "#111827",
         fontWeight: 700,
-        fontSize: 13,
+        fontSize: 12,
         cursor: "pointer",
       }}
     >
@@ -249,15 +249,13 @@ export default function LeftPanel({
       style={{
         width: 360,
         height: "100%",
-        borderRight: "1px solid #E5E7EB",
-        background: "#F3F4F6",
+        background: "#ffffff",
         overflow: "hidden",
-        alignSelf: "stretch",
       }}
     >
       <ScrollArea className="h-full">
       <div style={{ padding: 14, paddingRight: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
 
       {state.editorContext === "project" ? (
         <Section title="Project" description="Return to the linked project stage overview.">
@@ -273,7 +271,7 @@ export default function LeftPanel({
               ← Back to Project
             </button>
 
-            <div style={{ fontSize: 12, color: "#6B7280" }}>
+            <div style={{ fontSize: 11, color: "#6B7280" }}>
               {isDirty ? "Unsaved changes will require confirmation before leaving." : "No unsaved changes."}
             </div>
 
@@ -285,7 +283,7 @@ export default function LeftPanel({
                   alignItems: "center",
                   padding: "8px 12px",
                   borderRadius: 10,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: 600,
                   border: "1px solid #E5E7EB",
                   background: "#F9FAFB",
@@ -395,7 +393,7 @@ export default function LeftPanel({
               min={1}
             />
 
-            <div style={{ fontSize: 12, color: "#6B7280", gridColumn: "1 / -1" }}>
+            <div style={{ fontSize: 11, color: "#6B7280", gridColumn: "1 / -1" }}>
                 Auto top is on — top height will not fall below what's required for the minimum post length.
             </div>
           </div>
@@ -549,7 +547,7 @@ export default function LeftPanel({
                   borderRadius: 10,
                   padding: 10,
                   background: "#F9FAFB",
-                  fontSize: 12,
+                  fontSize: 11,
                   color: "#111827",
                 }}
               >
@@ -643,7 +641,7 @@ export default function LeftPanel({
                       borderRadius: 10,
                       padding: 10,
                       background: "#F9FAFB",
-                      fontSize: 12,
+                      fontSize: 11,
                       color: "#111827",
                     }}
                   >
@@ -669,7 +667,7 @@ export default function LeftPanel({
                     />
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Start boundary bay ref mode</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>Start boundary bay ref mode</div>
                       <Select
                         key={`${selectedPost.id}-${selectedPost.segmentId}-boundaryStartBayRefMode`}
                         value={selectedSegmentConstraints.boundaryStartBayRefMode}
@@ -692,7 +690,7 @@ export default function LeftPanel({
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>End boundary bay ref mode</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>End boundary bay ref mode</div>
                       <Select
                         key={`${selectedPost.id}-${selectedPost.segmentId}-boundaryEndBayRefMode`}
                         value={selectedSegmentConstraints.boundaryEndBayRefMode}
@@ -714,7 +712,7 @@ export default function LeftPanel({
                       </Select>
                     </div>
 
-                  <div style={{ fontSize: 12, color: "#6B7280" }}>
+                  <div style={{ fontSize: 11, color: "#6B7280" }}>
                     y_ref = segment topY - panel / bay height. Boundary mode affects first/last bay on this segment only.
                   </div>
                 </div>
@@ -734,7 +732,7 @@ export default function LeftPanel({
                   })
                 }
               />
-              <div style={{ fontSize: 12, color: "#6B7280" }}>
+              <div style={{ fontSize: 11, color: "#6B7280" }}>
                 Excluded posts don’t influence Auto Top’s minimum height. FFL still applies.
               </div>
             </div>

@@ -91,21 +91,33 @@ export default function EditorShell({
     }
   }, [state.balcony.balustradePath, state.balcony.balustradePaths, selectedTarget, hoveredTarget])
 
+  const PANEL_WIDTH = 360
+  const PANEL_GAP = 8 // gap between panel edge and toolbar
+
+  const toolbarLeft = leftPanelCollapsed
+    ? "1rem"
+    : `calc(1rem + ${PANEL_WIDTH}px + ${PANEL_GAP}px)`
+
   return (
     <div className={styles.shellRoot}>
-      {!leftPanelCollapsed ? (
-        <LeftPanel
-          state={state}
-          dispatch={dispatch}
-          hoveredTarget={hoveredTarget}
-          selectedTarget={selectedTarget}
-          onReturnToProject={handleReturnToProjectRequest}
-          isDirty={isDirty}
-          stageSettingsHref={stageSettingsHref}
-        />
-      ) : null}
+      <div
+        className={styles.canvasHost}
+        style={{ "--toolbar-left": toolbarLeft } as React.CSSProperties}
+      >
+        {!leftPanelCollapsed ? (
+          <div className={styles.leftPanelFloat}>
+            <LeftPanel
+              state={state}
+              dispatch={dispatch}
+              hoveredTarget={hoveredTarget}
+              selectedTarget={selectedTarget}
+              onReturnToProject={handleReturnToProjectRequest}
+              isDirty={isDirty}
+              stageSettingsHref={stageSettingsHref}
+            />
+          </div>
+        ) : null}
 
-      <div className={styles.canvasHost} style={{ position: "relative" }}>
         <button
           type="button"
           className={styles.btn}
@@ -113,17 +125,18 @@ export default function EditorShell({
           onClick={() => setLeftPanelCollapsed((v) => !v)}
           style={{
             position: "absolute",
-            top: 12,
-            left: 12,
-            zIndex: 40,
-            padding: "8px",
+            top: "1rem",
+            left: leftPanelCollapsed ? "1rem" : `calc(1rem + ${PANEL_WIDTH}px + ${PANEL_GAP}px)`,
+            zIndex: 50,
+            padding: "6px",
             background: "#FFFFFF",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            transition: "left 180ms ease",
           }}
         >
-          {leftPanelCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {leftPanelCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
         {state.view === "2d" ? (
@@ -201,7 +214,7 @@ export default function EditorShell({
 
               <button
                 className={styles.btn}
-                style={{ flex: 1, padding: "10px 12px", background: "#111827", color: "#fff" }}
+                style={{ flex: 1, padding: "10px 12px", background: "#8DB2D1", color: "#fff" }}
                 onClick={() => {
                   setShowUnsavedConfirm(false)
                   onReturnToProject?.()
