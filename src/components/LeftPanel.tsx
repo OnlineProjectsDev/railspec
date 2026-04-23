@@ -247,7 +247,7 @@ export default function LeftPanel({
   return (
     <aside
       style={{
-        width: 360,
+        width: 300,
         height: "100%",
         background: "#ffffff",
         overflow: "hidden",

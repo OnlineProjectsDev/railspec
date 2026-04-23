@@ -83,6 +83,10 @@ export default function EditorToolbar({
   saveDisabled = false,
   children,
   title,
+  panelCollapsed,
+  onReturnToProject,
+  isDirty,
+  stageSettingsHref,
 }: {
   state: RootState
   dispatch: React.Dispatch<any>
@@ -92,6 +96,10 @@ export default function EditorToolbar({
   saveDisabled?: boolean
   children?: React.ReactNode
   title?: string
+  panelCollapsed?: boolean
+  onReturnToProject?: () => void
+  isDirty?: boolean
+  stageSettingsHref?: string
 }) {
   const canShowGizmoTool =
     state.hasDerivedBalustrade && state.view === "3d" && state.mode === "balustrade"
@@ -277,6 +285,29 @@ export default function EditorToolbar({
                 ]}
                 onChange={(v) => dispatch({ type: "SET_GIZMO_TOOL", tool: v as any })}
               />
+            </div>
+          </>
+        ) : null}
+
+        {panelCollapsed && state.editorContext === "project" && (onReturnToProject || stageSettingsHref) ? (
+          <>
+            <div className={styles.toolbarDivider} />
+            <div className={styles.toolbarGroup}>
+              <div className={styles.toolbarGroupLabel}>Project</div>
+              {onReturnToProject ? (
+                <button className={styles.btn} onClick={onReturnToProject}>
+                  ← Back{isDirty ? " *" : ""}
+                </button>
+              ) : null}
+              {stageSettingsHref ? (
+                <a
+                  href={stageSettingsHref}
+                  className={styles.btn}
+                  style={{ textDecoration: "none" }}
+                >
+                  Stage Settings
+                </a>
+              ) : null}
             </div>
           </>
         ) : null}

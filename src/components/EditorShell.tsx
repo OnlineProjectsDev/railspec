@@ -91,7 +91,7 @@ export default function EditorShell({
     }
   }, [state.balcony.balustradePath, state.balcony.balustradePaths, selectedTarget, hoveredTarget])
 
-  const PANEL_WIDTH = 360
+  const PANEL_WIDTH = 300
   const PANEL_GAP = 8 // gap between panel edge and toolbar
 
   const toolbarLeft = leftPanelCollapsed
@@ -151,6 +151,10 @@ export default function EditorShell({
             onHoverTargetChange={setHoveredTarget}
             onSelectTargetChange={setSelectedTarget}
             toolbarTitle={toolbarTitle}
+            panelCollapsed={leftPanelCollapsed}
+            onReturnToProject={onReturnToProject ? handleReturnToProjectRequest : undefined}
+            isDirty={isDirty}
+            stageSettingsHref={stageSettingsHref}
           />
         ) : (
           <Canvas3D
@@ -164,6 +168,10 @@ export default function EditorShell({
             onHoverTargetChange={setHoveredTarget}
             onSelectTargetChange={setSelectedTarget}
             toolbarTitle={toolbarTitle}
+            panelCollapsed={leftPanelCollapsed}
+            onReturnToProject={onReturnToProject ? handleReturnToProjectRequest : undefined}
+            isDirty={isDirty}
+            stageSettingsHref={stageSettingsHref}
           />
         )}
       </div>

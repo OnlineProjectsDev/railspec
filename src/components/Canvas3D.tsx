@@ -358,6 +358,10 @@ export default function Canvas3D({
   onHoverTargetChange,
   onSelectTargetChange,
   toolbarTitle,
+  panelCollapsed,
+  onReturnToProject,
+  isDirty,
+  stageSettingsHref,
 }: {
   state: RootState
   dispatch: React.Dispatch<Action>
@@ -369,6 +373,10 @@ export default function Canvas3D({
   onHoverTargetChange: (target: InspectorTarget) => void
   onSelectTargetChange: (target: InspectorTarget) => void
   toolbarTitle?: string
+  panelCollapsed?: boolean
+  onReturnToProject?: () => void
+  isDirty?: boolean
+  stageSettingsHref?: string
 }) {
   const mountRef = useRef<HTMLDivElement>(null)
 
@@ -2162,7 +2170,7 @@ useEffect(() => {
 
   return (
     <div ref={mountRef} style={{ width: "100%", height: "100%", position: "relative" }}>
-      <EditorToolbar state={state} dispatch={dispatch} onSave={onSave} isSaving={isSaving} saveDisabled={saveDisabled} title={toolbarTitle}>
+      <EditorToolbar state={state} dispatch={dispatch} onSave={onSave} isSaving={isSaving} saveDisabled={saveDisabled} title={toolbarTitle} panelCollapsed={panelCollapsed} onReturnToProject={onReturnToProject} isDirty={isDirty} stageSettingsHref={stageSettingsHref}>
         {showPostSystem && state.mode === "balustrade" && selectedTarget?.kind === "post" && !state.laserHeightListEditMode ? (
           <PostSelectionCard state={state} dispatch={dispatch} />
         ) : null}

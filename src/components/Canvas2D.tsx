@@ -222,6 +222,10 @@ export default function Canvas2D({
   onHoverTargetChange,
   onSelectTargetChange,
   toolbarTitle,
+  panelCollapsed,
+  onReturnToProject,
+  isDirty,
+  stageSettingsHref,
 }: {
   state: RootState
   dispatch: React.Dispatch<Action>
@@ -233,6 +237,10 @@ export default function Canvas2D({
   onHoverTargetChange: (target: InspectorTarget) => void
   onSelectTargetChange: (target: InspectorTarget) => void
   toolbarTitle?: string
+  panelCollapsed?: boolean
+  onReturnToProject?: () => void
+  isDirty?: boolean
+  stageSettingsHref?: string
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null)
 
@@ -1709,6 +1717,10 @@ const floorThickSegs = useMemo(() => {
         isSaving={isSaving}
         saveDisabled={saveDisabled}
         title={toolbarTitle}
+        panelCollapsed={panelCollapsed}
+        onReturnToProject={onReturnToProject}
+        isDirty={isDirty}
+        stageSettingsHref={stageSettingsHref}
       >
         {canShowBalustrade && canEditBalustrade && !state.laserHeightListEditMode && selectedTarget?.kind === "post" ? (
           <PostSelectionCard state={state} dispatch={dispatch} />
