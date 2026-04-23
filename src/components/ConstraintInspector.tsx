@@ -975,9 +975,28 @@ export default function ConstraintInspector({
         overflowY: "auto",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-        <div style={{ fontWeight: 700, color: "#111827", fontSize: compact ? 13 : 14 }}>{title}</div>
-        {sourceLabel ? (
+      {title ? (
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+          <div style={{ fontWeight: 700, color: "#111827", fontSize: compact ? 13 : 14 }}>{title}</div>
+          {sourceLabel ? (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: selectedTarget ? "#1D4ED8" : "#6B7280",
+                background: selectedTarget ? "#DBEAFE" : "#F3F4F6",
+                border: "1px solid #E5E7EB",
+                borderRadius: 999,
+                padding: "2px 8px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {sourceLabel}
+            </span>
+          ) : null}
+        </div>
+      ) : sourceLabel ? (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <span
             style={{
               fontSize: 11,
@@ -992,10 +1011,14 @@ export default function ConstraintInspector({
           >
             {sourceLabel}
           </span>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
-      <div style={{ fontWeight: 600, color: "#111827", fontSize: compact ? 13 : 14 }}>{content.heading}</div>
+      {!activeTarget ? (
+        <div style={{ fontSize: 12, color: "#6B7280" }}>Nothing selected</div>
+      ) : (
+        <div style={{ fontWeight: 600, color: "#111827", fontSize: compact ? 13 : 14 }}>{content.heading}</div>
+      )}
 
       {content.rows.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

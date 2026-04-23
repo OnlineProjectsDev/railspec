@@ -1,6 +1,7 @@
 // /components/LeftPanel.tsx
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import { RootState, BoundaryBayRefMode } from "@/lib/types"
 import { Action } from "@/lib/reducer"
 import styles from "./EditorShell.module.css"
@@ -15,6 +16,25 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  LayoutGrid,
+  MousePointer2,
+  Ruler,
+  Settings2,
+  SlidersHorizontal,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react"
 
 function Chip({ label }: { label: string }) {
   return (
@@ -36,17 +56,52 @@ function Chip({ label }: { label: string }) {
   )
 }
 
+function SidebarIconButton({
+  icon: Icon,
+  label,
+  onClick,
+  highlighted,
+}: {
+  icon: LucideIcon
+  label: string
+  onClick: () => void
+  highlighted?: boolean
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          className={styles.sidebarIconBtn}
+          onClick={onClick}
+          aria-label={label}
+          style={highlighted ? { background: "#F3F4F6", color: "#374151" } : undefined}
+        >
+          <Icon size={16} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function Section({
+  id,
   title,
   description,
   children,
+  icon: Icon,
 }: {
+  id?: string
   title: string
   description?: string
   children: React.ReactNode
+  icon?: LucideIcon
 }) {
   return (
     <div
+      id={id}
       style={{
         border: "1px solid #E5E7EB",
         borderRadius: 12,
@@ -56,7 +111,10 @@ function Section({
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
-        <div style={{ fontWeight: 600, color: "#111827" }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {Icon ? <Icon size={13} style={{ color: "#6B7280", flexShrink: 0 }} /> : null}
+          <div style={{ fontWeight: 600, color: "#111827" }}>{title}</div>
+        </div>
         {description ? <div style={{ fontSize: 11, color: "#6B7280" }}>{description}</div> : null}
       </div>
       {children}
@@ -221,6 +279,8 @@ export default function LeftPanel({
   onReturnToProject,
   isDirty = false,
   stageSettingsHref,
+  collapsed = false,
+  onToggleCollapsed,
 }: {
   state: RootState
   dispatch: React.Dispatch<Action>
@@ -229,6 +289,8 @@ export default function LeftPanel({
   onReturnToProject?: () => void
   isDirty?: boolean
   stageSettingsHref?: string
+  collapsed?: boolean
+  onToggleCollapsed?: () => void
 }) {
   const selectedCount = state.selectedPostIds.length
   const selectedPost =
@@ -244,21 +306,96 @@ export default function LeftPanel({
   const allSelectedExcluded =
     state.selectedPostIds.length > 0 && state.selectedPostIds.every((id) => excludedSet.has(id))
 
+  const pendingScrollRef = useRef<string | null>(null)
+
+  function handleIconClick(sectionId: string) {
+    if (collapsed) {
+      pendingScrollRef.current = sectionId
+      onToggleCollapsed?.()
+    }
+  }
+
+  useEffect(() => {
+    if (!collapsed && pendingScrollRef.current) {
+      const id = pendingScrollRef.current
+      pendingScrollRef.current = null
+      // Wait for width + opacity transitions (260ms) then smooth scroll
+      const t = setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 270)
+      return () => clearTimeout(t)
+    }
+  }, [collapsed])
+
   return (
-    <aside
-      style={{
-        width: 300,
-        height: "100%",
-        background: "#ffffff",
-        overflow: "hidden",
-      }}
-    >
+    <TooltipProvider>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {/* Icon strip — visible when collapsed */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0, left: 0, bottom: 0,
+          width: 44,
+          opacity: collapsed ? 1 : 0,
+          pointerEvents: collapsed ? "auto" : "none",
+          transition: "opacity 200ms ease",
+          zIndex: 2,
+        }}
+      >
+        <div className={styles.sidebarIconStrip}>
+          <SidebarIconButton icon={ChevronLeft} label="Expand panel" highlighted onClick={() => onToggleCollapsed?.()} />
+          <div className={styles.sidebarIconDivider} />
+          {state.editorContext === "project" ? (
+            <SidebarIconButton icon={ArrowLeft} label="Project" onClick={() => handleIconClick("sidebar-project")} />
+          ) : null}
+          {state.editorContext === "sandbox" ? (
+            <SidebarIconButton icon={LayoutGrid} label="Templates" onClick={() => handleIconClick("sidebar-templates")} />
+          ) : null}
+          <SidebarIconButton icon={Ruler} label="Elevation settings" onClick={() => handleIconClick("sidebar-elevation")} />
+          <SidebarIconButton icon={SlidersHorizontal} label="Post generation" onClick={() => handleIconClick("sidebar-post-generation")} />
+          {state.mode === "balustrade" ? (
+            <SidebarIconButton icon={Wrench} label="Tools" onClick={() => handleIconClick("sidebar-tools")} />
+          ) : null}
+          <SidebarIconButton icon={Eye} label="Inspector" onClick={() => handleIconClick("sidebar-inspector")} />
+          {state.hasDerivedBalustrade ? (
+            <SidebarIconButton icon={MousePointer2} label="Selection" onClick={() => handleIconClick("sidebar-selection")} />
+          ) : null}
+        </div>
+      </div>
+
+      {/* Full panel — visible when expanded */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0, left: 0, bottom: 0,
+          width: 300,
+          opacity: collapsed ? 0 : 1,
+          pointerEvents: collapsed ? "none" : "auto",
+          transition: "opacity 200ms ease",
+          zIndex: 1,
+        }}
+      >
+      <aside
+        style={{
+          width: 300,
+          height: "100%",
+          background: "#ffffff",
+          display: "flex",
+          flexDirection: "row",
+        }}
+      >
+      <div style={{ flex: 1, overflow: "hidden", height: "100%" }}>
       <ScrollArea className="h-full">
       <div style={{ padding: 14, paddingRight: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
+      <div style={{ marginBottom: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Balustrade Editor</div>
+          <SidebarIconButton icon={ChevronRight} label="Collapse panel" highlighted onClick={() => onToggleCollapsed?.()} />
+        </div>
+      </div>
 
       {state.editorContext === "project" ? (
-        <Section title="Project" description="Return to the linked project stage overview.">
+        <Section id="sidebar-project" title="Project" description="Return to the linked project stage overview." icon={ArrowLeft}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <button
               className={styles.btn}
@@ -299,7 +436,7 @@ export default function LeftPanel({
       ) : null}
 
       {state.editorContext === "sandbox" ? (
-        <Section title="Templates" description="Load a starting layout and defaults.">
+        <Section id="sidebar-templates" title="Templates" description="Load a starting layout and defaults." icon={LayoutGrid}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {editorTemplates.map((template) => (
               <button
@@ -318,7 +455,7 @@ export default function LeftPanel({
         </Section>
       ) : null}
 
-      <Section title="Elevation settings" description="Set heights and constraints used across the layout.">
+      <Section id="sidebar-elevation" title="Elevation settings" description="Set heights and constraints used across the layout." icon={Ruler}>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {/* <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -400,7 +537,7 @@ export default function LeftPanel({
         </div>
       </Section>
 
-      <Section title="Post generation" description="Set these before building — they are applied each time the balustrade is built.">
+      <Section id="sidebar-post-generation" title="Post generation" description="Set these before building — they are applied each time the balustrade is built." icon={SlidersHorizontal}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <Field
             label="Max post spacing"
@@ -474,16 +611,71 @@ export default function LeftPanel({
       </Section>
       */}
 
-      <Section
-        title="Inspector"
-        description="Hover or select posts and rails to see what failed and what to adjust."
-      >
-        <ConstraintInspector
-          state={state}
-          hoveredTarget={hoveredTarget}
-          selectedTarget={selectedTarget}
-        />
+      <Section id="sidebar-tools" title="Tools" icon={Wrench}>
+        {state.mode !== "balustrade" ? (
+          <div style={{ fontSize: 11, color: "#6B7280" }}>
+            Switch to Balustrade mode to access post tools and laser heights.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+            <TogglePill
+              label="Laser heights"
+              on={state.laserHeightListEditMode}
+              onClick={() => dispatch({ type: "SET_LASER_HEIGHT_LIST_EDIT_MODE", value: !state.laserHeightListEditMode })}
+            />
+            <div style={{ fontSize: 11, color: "#6B7280" }}>Click anchorage points on the canvas to adjust their height.</div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>Post tools</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <TogglePill
+                  label="Add post"
+                  on={state.postsTool === "add_mid_post"}
+                  onClick={() => dispatch({ type: "SET_POSTS_TOOL", tool: state.postsTool === "add_mid_post" ? null : "add_mid_post" })}
+                />
+                <TogglePill
+                  label="Fill spacing"
+                  on={state.postsTool === "add_posts_to_spacing"}
+                  onClick={() => dispatch({ type: "SET_POSTS_TOOL", tool: state.postsTool === "add_posts_to_spacing" ? null : "add_posts_to_spacing" })}
+                />
+                <TogglePill
+                  label="Delete post"
+                  on={state.postsTool === "delete_post"}
+                  onClick={() => dispatch({ type: "SET_POSTS_TOOL", tool: state.postsTool === "delete_post" ? null : "delete_post" })}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: "#6B7280" }}>Arm a tool then click on the canvas to apply it.</div>
+            </div>
+
+            {state.hasDerivedBalustrade && state.view === "3d" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>3D gizmo</div>
+                <Segmented
+                  value={state.gizmoTool}
+                  options={[
+                    { value: "translate", label: "Move" },
+                    { value: "rotate", label: "Rotate" },
+                    { value: "extend", label: "Post" },
+                    { value: "anchor", label: "Rail" },
+                  ]}
+                  onChange={(v) => dispatch({ type: "SET_GIZMO_TOOL", tool: v as any })}
+                />
+              </div>
+            ) : null}
+
+          </div>
+        )}
       </Section>
+
+      <div id="sidebar-inspector">
+      <ConstraintInspector
+        state={state}
+        hoveredTarget={hoveredTarget}
+        selectedTarget={selectedTarget}
+        title=""
+      />
+      </div>
 
       {/* {state.mode === "balustrade" ? (
         <Section title="Post behaviour" description="How dragging affects spacing on the current segment.">
@@ -524,7 +716,9 @@ export default function LeftPanel({
 
       {state.hasDerivedBalustrade ? (
         <Section
+        id="sidebar-selection"
         title="Selection"
+        icon={MousePointer2}
         description={
           selectedCount === 0
             ? "Nothing selected. Click a post in the canvas."
@@ -805,6 +999,10 @@ export default function LeftPanel({
 
       </div>
       </ScrollArea>
+      </div>
     </aside>
+    </div>
+    </div>
+    </TooltipProvider>
   )
 }

@@ -5,6 +5,24 @@ import { useState } from "react"
 import { CheckCheck, Save } from "lucide-react"
 import { RootState } from "@/lib/types"
 import styles from "./EditorShell.module.css"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+function WithTooltip({ tip, children }: { tip?: string; children: React.ReactNode }) {
+  if (!tip) return <>{children}</>
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children as React.ReactElement}</TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={6}>
+        {tip}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
 
 function Segmented({
   value,
@@ -12,7 +30,7 @@ function Segmented({
   onChange,
 }: {
   value: string
-  options: { value: string; label: string; disabled?: boolean }[]
+  options: { value: string; label: string; disabled?: boolean; title?: string }[]
   onChange: (value: string) => void
 }) {
   return (
@@ -21,7 +39,7 @@ function Segmented({
         const active = opt.value === value
         const disabled = !!opt.disabled
 
-        return (
+        const btn = (
           <button
             key={opt.value}
             className={styles.btn}
@@ -43,6 +61,13 @@ function Segmented({
             {opt.label}
           </button>
         )
+
+        return opt.title ? (
+          <Tooltip key={opt.value}>
+            <TooltipTrigger asChild>{btn}</TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={6}>{opt.title}</TooltipContent>
+          </Tooltip>
+        ) : btn
       })}
     </div>
   )
@@ -59,10 +84,9 @@ function ToolPill({
   onClick: () => void
   title?: string
 }) {
-  return (
+  const btn = (
     <button
       className={styles.btn}
-      title={title}
       style={{
         background: active ? "#8DB2D1" : "#FFFFFF",
         color: active ? "#FFFFFF" : "#111827",
@@ -72,12 +96,19 @@ function ToolPill({
       {label}
     </button>
   )
+
+  return (
+    <WithTooltip tip={title}>
+      {btn}
+    </WithTooltip>
+  )
 }
 
 export default function EditorToolbar({
   state,
   dispatch,
   onFit,
+  onCenter,
   onSave,
   isSaving = false,
   saveDisabled = false,
@@ -91,6 +122,7 @@ export default function EditorToolbar({
   state: RootState
   dispatch: React.Dispatch<any>
   onFit?: () => void
+  onCenter?: () => void
   onSave?: () => void
   isSaving?: boolean
   saveDisabled?: boolean
@@ -107,6 +139,7 @@ export default function EditorToolbar({
   const [showDeriveConfirm, setShowDeriveConfirm] = useState(false)
 
   return (
+    <TooltipProvider>
     <div className={styles.toolbar}>
       <div className={styles.toolbarSurface}>
         <div className={styles.toolbarGroup}>
@@ -114,82 +147,14 @@ export default function EditorToolbar({
             {state.editorContext === "sandbox" ? "Workspace" : (title ?? "Workspace")}
           </div>
 
-          {onFit ? (
-            <button className={styles.btn} onClick={onFit}>
-              Fit
-            </button>
-          ) : null}
-
-          {onSave ? (
-            <button
-              className={styles.btn}
-              onClick={onSave}
-              disabled={isSaving || saveDisabled}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                opacity: saveDisabled && !isSaving ? 0.55 : 1,
-                cursor: saveDisabled && !isSaving ? "not-allowed" : "pointer",
-                color: saveDisabled && !isSaving ? "#6B7280" : undefined,
-              }}
-            >
-              {isSaving ? (
-                <>
-                  <Save size={16} />
-                  Saving...
-                </>
-              ) : saveDisabled ? (
-                <>
-                  <CheckCheck size={16} />
-                  Saved
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  Save
-                </>
-              )}
-            </button>
-          ) : null}
-
           <Segmented
             value={state.mode}
             options={[
-              { value: "substrate", label: "Substrate" },
-              { value: "balustrade", label: "Balustrade", disabled: !state.hasDerivedBalustrade },
+              { value: "substrate", label: "Substrate", title: "Draw and edit the floor outline" },
+              { value: "balustrade", label: "Balustrade", disabled: !state.hasDerivedBalustrade, title: state.hasDerivedBalustrade ? "Adjust posts, panels, and toprails" : "Build the balustrade first (Substrate → Build Balustrade)" },
             ]}
             onChange={(v) => dispatch({ type: "SET_MODE", mode: v as any })}
           />
-
-          <Segmented
-            value={state.view}
-            options={[
-              { value: "2d", label: "2D" },
-              { value: "3d", label: "3D" },
-            ]}
-            onChange={(v) => dispatch({ type: "SET_VIEW", view: v as any })}
-          />
-
-          <ToolPill
-            label={state.snapEnabled ? "Snap ON" : "Snap OFF"}
-            active={state.snapEnabled}
-            onClick={() => dispatch({ type: "TOGGLE_SNAP" })}
-          />
-
-          {state.mode === "balustrade" ? (
-            <ToolPill
-              label="Laser heights"
-              title="Toggle laser height editing — click anchorage points on the canvas to adjust their height"
-              active={state.laserHeightListEditMode}
-              onClick={() =>
-                dispatch({
-                  type: "SET_LASER_HEIGHT_LIST_EDIT_MODE",
-                  value: !state.laserHeightListEditMode,
-                })
-              }
-            />
-          ) : null}
         </div>
 
         {state.mode === "substrate" ? (
@@ -201,6 +166,7 @@ export default function EditorToolbar({
 
               <ToolPill
                 label={state.hasDerivedBalustrade ? "Rebuild Balustrade" : "Build Balustrade"}
+                title={state.hasDerivedBalustrade ? "Re-generate posts from the floor outline — all manual adjustments will be reset" : "Generate posts and rails from the current substrate outline"}
                 onClick={() => {
                   if (!state.hasDerivedBalustrade) {
                     dispatch({ type: "DERIVE_BALUSTRADE_FROM_FLOOR" })
@@ -209,81 +175,6 @@ export default function EditorToolbar({
 
                   setShowDeriveConfirm(true)
                 }}
-              />
-
-              {/* <ToolPill
-                label="Regenerate posts"
-                onClick={() =>
-                  dispatch({
-                    type: "REGENERATE_POSTS",
-                    spacing: state.balcony.maxPostSpacing ?? 1000,
-                  })
-                }
-              /> */}
-            </div>
-          </>
-        ) : null}
-
-        {state.mode === "balustrade" ? (
-          <>
-            <div className={styles.toolbarDivider} />
-
-            <div className={styles.toolbarGroup}>
-              <div className={styles.toolbarGroupLabel}>Post tools</div>
-
-              <ToolPill
-                label="Add post"
-                active={state.postsTool === "add_mid_post"}
-                onClick={() =>
-                  dispatch({
-                    type: "SET_POSTS_TOOL",
-                    tool: state.postsTool === "add_mid_post" ? null : "add_mid_post",
-                  })
-                }
-              />
-
-              <ToolPill
-                label="Fill spacing"
-                active={state.postsTool === "add_posts_to_spacing"}
-                onClick={() =>
-                  dispatch({
-                    type: "SET_POSTS_TOOL",
-                    tool: state.postsTool === "add_posts_to_spacing" ? null : "add_posts_to_spacing",
-                  })
-                }
-              />
-
-              <ToolPill
-                label="Delete post"
-                active={state.postsTool === "delete_post"}
-                onClick={() =>
-                  dispatch({
-                    type: "SET_POSTS_TOOL",
-                    tool: state.postsTool === "delete_post" ? null : "delete_post",
-                  })
-                }
-              />
-
-            </div>
-          </>
-        ) : null}
-
-        {canShowGizmoTool ? (
-          <>
-            <div className={styles.toolbarDivider} />
-
-            <div className={styles.toolbarGroup}>
-              <div className={styles.toolbarGroupLabel}>3D gizmo</div>
-
-              <Segmented
-                value={state.gizmoTool}
-                options={[
-                  { value: "translate", label: "Move" },
-                  { value: "rotate", label: "Rotate" },
-                  { value: "extend", label: "Post" },
-                  { value: "anchor", label: "Rail" },
-                ]}
-                onChange={(v) => dispatch({ type: "SET_GIZMO_TOOL", tool: v as any })}
               />
             </div>
           </>
@@ -311,9 +202,72 @@ export default function EditorToolbar({
             </div>
           </>
         ) : null}
+
+        <div className={styles.toolbarSpacer} />
+
+        <div className={styles.toolbarGroup}>
+          <ToolPill
+            label={state.snapEnabled ? "Snap ON" : "Snap OFF"}
+            title="When on, vertices snap to the nearest grid point while drawing"
+            active={state.snapEnabled}
+            onClick={() => dispatch({ type: "TOGGLE_SNAP" })}
+          />
+
+          {onCenter ? (
+            <WithTooltip tip="Pan to centre the content in the visible area">
+              <button className={styles.btn} onClick={onCenter}>
+                Centre
+              </button>
+            </WithTooltip>
+          ) : null}
+
+          {onFit ? (
+            <WithTooltip tip="Pan and zoom to fit all content in view">
+              <button className={styles.btn} onClick={onFit}>
+                Fit
+              </button>
+            </WithTooltip>
+          ) : null}
+
+          {onSave ? (
+            <WithTooltip tip={saveDisabled && !isSaving ? "All changes saved" : "Save your current changes"}>
+              <button
+                className={styles.btn}
+                onClick={onSave}
+                disabled={isSaving || saveDisabled}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: saveDisabled && !isSaving ? 0.55 : 1,
+                  cursor: saveDisabled && !isSaving ? "not-allowed" : "pointer",
+                  color: saveDisabled && !isSaving ? "#6B7280" : undefined,
+                }}
+              >
+                {isSaving ? (
+                  <>
+                    <Save size={16} />
+                    Saving...
+                  </>
+                ) : saveDisabled ? (
+                  <>
+                    <CheckCheck size={16} />
+                    Saved
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    Save
+                  </>
+                )}
+              </button>
+            </WithTooltip>
+          ) : null}
+        </div>
       </div>
 
       {children ? <div className={styles.toolbarRow}>{children}</div> : null}
+    </div>
 
       {showDeriveConfirm ? (
         <div
@@ -377,6 +331,6 @@ export default function EditorToolbar({
           </div>
         </div>
       ) : null}
-    </div>
+    </TooltipProvider>
   )
 }

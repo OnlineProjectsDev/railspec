@@ -2,7 +2,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import Canvas2D from "./Canvas2D"
 import Canvas3D from "./Canvas3D"
 import LeftPanel from "./LeftPanel"
@@ -91,53 +90,32 @@ export default function EditorShell({
     }
   }, [state.balcony.balustradePath, state.balcony.balustradePaths, selectedTarget, hoveredTarget])
 
-  const PANEL_WIDTH = 300
+  const ICON_STRIP_WIDTH = 44
+  const FULL_PANEL_WIDTH = 300
+  const PANEL_WIDTH = leftPanelCollapsed ? ICON_STRIP_WIDTH : FULL_PANEL_WIDTH
   const PANEL_GAP = 8 // gap between panel edge and toolbar
 
-  const toolbarLeft = leftPanelCollapsed
-    ? "1rem"
-    : `calc(1rem + ${PANEL_WIDTH}px + ${PANEL_GAP}px)`
+  const toolbarRight = `calc(1rem + ${PANEL_WIDTH}px + 2rem)`
 
   return (
     <div className={styles.shellRoot}>
       <div
         className={styles.canvasHost}
-        style={{ "--toolbar-left": toolbarLeft } as React.CSSProperties}
+        style={{ "--toolbar-right": toolbarRight } as React.CSSProperties}
       >
-        {!leftPanelCollapsed ? (
-          <div className={styles.leftPanelFloat}>
-            <LeftPanel
-              state={state}
-              dispatch={dispatch}
-              hoveredTarget={hoveredTarget}
-              selectedTarget={selectedTarget}
-              onReturnToProject={handleReturnToProjectRequest}
-              isDirty={isDirty}
-              stageSettingsHref={stageSettingsHref}
-            />
-          </div>
-        ) : null}
-
-        <button
-          type="button"
-          className={styles.btn}
-          title={leftPanelCollapsed ? "Show panel" : "Hide panel"}
-          onClick={() => setLeftPanelCollapsed((v) => !v)}
-          style={{
-            position: "absolute",
-            top: "1rem",
-            left: leftPanelCollapsed ? "1rem" : `calc(1rem + ${PANEL_WIDTH}px + ${PANEL_GAP}px)`,
-            zIndex: 50,
-            padding: "6px",
-            background: "#FFFFFF",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "left 180ms ease",
-          }}
-        >
-          {leftPanelCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
+        <div className={styles.leftPanelFloat} style={{ width: leftPanelCollapsed ? 44 : 300 }}>
+          <LeftPanel
+            state={state}
+            dispatch={dispatch}
+            hoveredTarget={hoveredTarget}
+            selectedTarget={selectedTarget}
+            onReturnToProject={handleReturnToProjectRequest}
+            isDirty={isDirty}
+            stageSettingsHref={stageSettingsHref}
+            collapsed={leftPanelCollapsed}
+            onToggleCollapsed={() => setLeftPanelCollapsed((v) => !v)}
+          />
+        </div>
 
         {state.view === "2d" ? (
           <Canvas2D

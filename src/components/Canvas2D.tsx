@@ -571,6 +571,44 @@ export default function Canvas2D({
     setView({ x: b0.minX, y: b0.minY, w, h })
   }
 
+  const centerToVisible = () => {
+    if (!svgRef.current) return
+
+    // Collect all meaningful points: posts, rail ends, floor vertices
+    const extra: { x: number; y: number }[] = []
+    for (const r of railEndVirtualPointsByRun) {
+      if (r.start) extra.push(r.start)
+      if (r.end) extra.push(r.end)
+    }
+    if (state.foundation?.floor?.vertices?.length) {
+      for (const v of state.foundation.floor.vertices) extra.push({ x: v.x, y: v.z })
+    }
+
+    const b0 = expandBounds(computeBounds(state.posts, extra), 400)
+    const cx = (b0.minX + b0.maxX) / 2
+    const cy = (b0.minY + b0.maxY) / 2
+
+    // Account for preserveAspectRatio="xMidYMid meet" letterboxing.
+    // scale = the uniform scale applied to the viewBox to fit inside the SVG element.
+    // leftOff / topOff = pixel padding added on each side when one axis has extra space.
+    const svgEl = svgRef.current
+    const W = svgEl.getBoundingClientRect().width
+    const H = svgEl.getBoundingClientRect().height
+    const scale = Math.min(W / view.w, H / view.h)
+    const leftOff = (W - view.w * scale) / 2
+    const topOff = (H - view.h * scale) / 2
+
+    // Target: cx appears at the horizontal centre of the visible (non-panel) area.
+    const panelPx = (panelCollapsed ? 44 : 300) + 16
+    const targetPxX = (W - panelPx) / 2
+    const targetPxY = H / 2
+
+    const newX = cx - (targetPxX - leftOff) / scale
+    const newY = cy - (targetPxY - topOff) / scale
+
+    setView({ x: newX, y: newY, w: view.w, h: view.h })
+  }
+
   const clientToWorld = (clientX: number, clientY: number) => {
     const svg = svgRef.current
     if (!svg) return { x: 0, y: 0 }
@@ -1713,6 +1751,7 @@ const floorThickSegs = useMemo(() => {
         state={state}
         dispatch={dispatch}
         onFit={fitToContent}
+        onCenter={centerToVisible}
         onSave={onSave}
         isSaving={isSaving}
         saveDisabled={saveDisabled}
@@ -3427,17 +3466,6 @@ const floorThickSegs = useMemo(() => {
           : "Substrate mode: edit floor vertices, edge lengths/offsets, and corner angles."}
       </div>
 
-      <div style={{ position: "absolute", right: 12, bottom: 12, width: 340, zIndex: 20, pointerEvents: "none" }}>
-        <div style={{ pointerEvents: "auto" }}>
-          <ConstraintInspector
-            state={state}
-            hoveredTarget={hoveredTarget}
-            selectedTarget={selectedTarget}
-            compact
-            title="2D details"
-          />
-        </div>
-      </div>
     </div>
   )
 }
